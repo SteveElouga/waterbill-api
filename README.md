@@ -1003,6 +1003,8 @@ waterbill/
 | `scripts/dev.sh`  | Mode développement | Lancement avec hot-reload, volumes, runserver   |
 | `scripts/prod.sh` | Mode production    | Lancement sécurisé avec gunicorn, vérifications |
 
+> **Note** : Seuls les scripts bash (`.sh`) sont disponibles. Les scripts PowerShell (`.ps1`) ne sont pas fournis pour maintenir la simplicité et la compatibilité cross-platform.
+
 ## 📝 Notes de développement
 
 ### 🔄 Workflows de développement
@@ -1039,6 +1041,7 @@ waterbill/
 - **✅ Dockerfiles mis à jour** : Utilisation des dépendances séparées
 - **✅ .gitignore nettoyé** : Suppression des doublons et caractères corrompus
 - **✅ Script entrypoint corrigé** : Création superuser avec paramètre `--phone`
+- **✅ Scripts clarifiés** : Seuls les scripts bash (`.sh`) sont fournis pour la compatibilité cross-platform
 
 **Installation requise** :
 
