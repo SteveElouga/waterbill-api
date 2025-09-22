@@ -1,0 +1,28 @@
+# Docker Compose pour WaterBill API - Configuration PRODUCTION explicite
+#
+# Utilisation: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Ce fichier force les configurations de production même si docker-compose.override.yml existe
+
+services:
+  web:
+    environment:
+      # Force le mode production (gunicorn)
+      - DJANGO_RUNSERVER=0
+      # Variables de production
+      - DEBUG=False
+      # Variables Twilio (obligatoires en production pour SMS réels)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      # Cache Redis pour throttling
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+    # Production: pas de volume bind mount
+    volumes: []
+    # Production: redémarre automatiquement
+    restart: always
+
+  # En production, pgAdmin est généralement désactivé
+  pgadmin:
+    profiles:
+      - optional

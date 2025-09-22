@@ -1,0 +1,25 @@
+# Configuration Git pour gestion des fins de ligne
+# Force LF pour tous les fichiers texte
+* text=auto eol=lf
+
+# Spécifique pour les scripts shell
+*.sh text eol=lf
+docker/*.sh text eol=lf
+
+# Fichiers binaires
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.exe binary
+
+# Fichiers de base de données
+*.sqlite3 binary
+*.db binary
+
+# Logs
+*.log text eol=lf

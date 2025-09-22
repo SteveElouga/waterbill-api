@@ -1,0 +1,40 @@
+# Django Core
+Django==5.0.8
+djangorestframework==3.15.2
+
+# Database (PostgreSQL v3)
+psycopg[binary]==3.2.10
+
+# Authentication & Security
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+argon2-cffi==25.1.0
+
+# Cache (Redis)
+django-redis==5.4.0
+redis==6.4.0
+
+# SMS Gateway
+twilio==9.8.1
+
+# Environment & Configuration
+django-environ==0.12.0
+
+# Filtering & Documentation
+django-filter==25.1
+drf-spectacular==0.28.0
+drf-spectacular-sidecar==2025.9.1
+
+# PDF Generation & Images
+WeasyPrint==66.0
+Pillow==11.3.0
+
+# Utilities
+python-dateutil==2.9.0.post0
+tzdata==2025.2
+
+# Production Server
+gunicorn==23.0.0
+
+# Static Files
+whitenoise==6.11.0

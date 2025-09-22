@@ -1,0 +1,40 @@
+repos:
+  # --- Formatage ---
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  # --- Lint & import sorting ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0
+    hooks:
+      - id: ruff
+        args: ["--fix"] # corrige auto si possible
+
+  # --- Sécurité ---
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: ["--configfile", ".bandit"]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.2
+    hooks:
+      - id: python-safety-dependencies-check
+        args: ["--full-report"]
+
+  # --- Tests (pytest) ---
+  # Note: pytest est exécuté dans Docker, pas dans les hooks pre-commit
+
+  # --- Hooks utilitaires ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files

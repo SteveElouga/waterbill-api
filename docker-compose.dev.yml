@@ -1,0 +1,43 @@
+# Docker Compose pour WaterBill API - Configuration DÉVELOPPEMENT
+#
+# IMPORTANT:
+# - Ce fichier doit être explicitement chargé avec -f
+# - S'applique UNIQUEMENT en mode développement
+# - Ajoute les configurations spécifiques au dev (volumes, runserver, etc.)
+#
+# Utilisation:
+# - Dev: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# - Prod: docker-compose -f docker-compose.yml up (ignore ce fichier)
+
+services:
+  # Configuration spécifique au développement pour le service web
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    environment:
+      # Force le mode développement (runserver au lieu de gunicorn)
+      - DJANGO_RUNSERVER=1
+      # Variables Twilio (optionnelles - utilise DummySmsGateway en dev)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      # Cache Redis pour throttling (même en dev)
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+    volumes:
+      # Hot-reload: monte le code source pour les modifications en temps réel
+      - .:/app
+      # Exclut certains dossiers pour éviter les conflits
+      - /app/venv
+      - /app/__pycache__
+      - /app/.git
+    # Mode développement: redémarre automatiquement en cas d'erreur
+    restart: "no"
+
+  # Configuration optionnelle pour pgAdmin en développement
+  pgadmin:
+    # Variables d'environnement par défaut pour le dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-dev123}

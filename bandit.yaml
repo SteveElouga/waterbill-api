@@ -1,0 +1,42 @@
+# Configuration Bandit pour WaterBill API
+exclude_dirs:
+  - venv
+  - .venv
+  - env
+  - .env
+  - node_modules
+  - migrations
+  - __pycache__
+  - .git
+
+skips:
+  - B101 # Skip assert_used test
+  - B601 # Skip shell=True in subprocess calls (for Django management commands)
+
+tests:
+  - B201 # flask_debug_true
+  - B301 # pickle
+  - B302 # marshal
+  - B303 # md5
+  - B304 # cipher
+  - B305 # cipher
+  - B306 # mktemp_q
+  - B307 # eval
+  - B308 # mark_safe
+  - B309 # httpsconnection
+  - B310 # urllib_urlopen
+  - B311 # random
+  - B312 # telnetlib
+  - B313 # xml_bad_cElementTree
+  - B314 # xml_bad_ElementTree
+  - B315 # xml_bad_expatreader
+  - B316 # xml_bad_sax
+  - B317 # xml_bad_minidom
+  - B318 # xml_bad_pulldom
+  - B319 # xml_bad_etree
+  - B320 # xml_bad_lxml
+  - B321 # ftplib
+  - B322 # input
+  - B323 # unverified_context
+  - B324 # hashlib_new_insecure_functions
+  - B325 # tempnam

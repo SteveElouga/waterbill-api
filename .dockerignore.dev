@@ -1,0 +1,159 @@
+# .dockerignore spécifique pour le développement
+# Utilisé par Dockerfile.dev pour inclure les fichiers de développement
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+DOCUMENTATION.md
+*.md
+
+# Docker files (exclure les autres Dockerfiles pour éviter les conflits)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Logs
+logs/
+*.log
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+static/
+media/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (if any)
+node_modules/
+
+# Environment files (security)
+.env
+.env.local
+.env.production
+.env.development
+
+# Setup scripts (not needed in container)
+setup.sh
+setup.ps1
+setup.bat
+
+# Local development
+local_settings.py
+dev_settings.py
+
+# Cache directories
+.cache/
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Bandit and safety
+.bandit
+.safety
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-*
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux specific
+*~
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Note: requirements-dev.txt est INCLUS pour Dockerfile.dev
+# Note: .pre-commit-config.yaml, bandit.yaml, mypy.ini, pytest.ini sont INCLUS pour Dockerfile.dev

@@ -1,0 +1,100 @@
+# Docker Compose pour WaterBill API - Configuration de base (Production-safe)
+#
+# IMPORTANT:
+# - Ce fichier est sécurisé pour la PRODUCTION
+# - Pas de volume bind mount du code source
+# - Utilise gunicorn par défaut (DJANGO_RUNSERVER non défini)
+#
+# Pour le DÉVELOPPEMENT, docker-compose.override.yml est automatiquement chargé
+# et ajoute les configurations spécifiques au dev (volumes, runserver, etc.)
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: waterbill-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-waterbill}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-defaultpassword}
+      TZ: ${TZ:-Africa/Douala}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Optionnel: scripts d'init (création d'extensions, etc.)
+      # - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Application Django (Production-ready)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waterbill-api
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-waterbill}
+      # DJANGO_RUNSERVER non défini = gunicorn (production)
+      # Variables Twilio (optionnelles - pour SMS réels en production)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      # Cache Redis pour throttling
+      - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # PRODUCTION: Pas de volume bind mount du code source
+    # Le code est copié dans l'image lors du build
+    restart: unless-stopped
+
+  # Redis pour le cache et throttling
+  redis:
+    image: redis:7-alpine
+    container_name: waterbill-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # pgAdmin pour administration de la base de données (optionnel)
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: waterbill-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+# Volumes persistants
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
