@@ -93,12 +93,13 @@ Transformer la gestion de la facturation d'eau en une expérience numérique flu
 
 | Composant            | Technologie                   | Version | Rôle                         |
 | -------------------- | ----------------------------- | ------- | ---------------------------- |
-| **Framework**        | Django REST Framework         | 3.15+   | API REST                     |
-| **Authentification** | djangorestframework-simplejwt | 5.3+    | JWT Tokens                   |
+| **Framework**        | Django                        | 5.0.8   | Framework web principal      |
+| **API**              | Django REST Framework         | 3.15.2  | API REST                     |
+| **Authentification** | djangorestframework-simplejwt | 5.5.1   | JWT Tokens                   |
 | **Base de données**  | PostgreSQL                    | 16+     | Stockage persistant          |
-| **SMS Gateway**      | Twilio                        | 8.0+    | Envoi SMS réels              |
+| **SMS Gateway**      | Twilio                        | 9.8.1   | Envoi SMS réels              |
 | **Cache**            | Redis + django-redis          | 7+      | Throttling et cache optimisé |
-| **Documentation**    | drf-spectacular               | 0.27+   | OpenAPI/Swagger              |
+| **Documentation**    | drf-spectacular               | 0.28.0  | OpenAPI/Swagger              |
 | **Tests**            | pytest + pytest-django        | 8.0+    | Tests unitaires              |
 | **Conteneurisation** | Docker + Docker Compose       | Latest  | Déploiement                  |
 
@@ -1027,7 +1028,14 @@ waterbill/
 - **✅ Fixture Pytest** : `conftest.py` avec mocks automatiques
 - **✅ Classes de base** : `MockedTestCase` et `MockedAPITestCase`
 - **✅ 100% de réussite** : Tous les tests passent sans SMS réels
-- **✅ Dépendance ajoutée** : `argon2-cffi==24.1.0` pour le hachage des mots de passe
+- **✅ Dépendance ajoutée** : `argon2-cffi==25.1.0` pour le hachage des mots de passe
+
+**Corrections récentes :**
+- **✅ Email pgAdmin corrigé** : `admin@example.com` au lieu de `admin@waterbill.local`
+- **✅ Fichiers requirements nettoyés** : Séparation claire prod/dev
+- **✅ Dockerfiles mis à jour** : Utilisation des dépendances séparées
+- **✅ .gitignore nettoyé** : Suppression des doublons et caractères corrompus
+- **✅ Script entrypoint corrigé** : Création superuser avec paramètre `--phone`
 
 **Installation requise** :
 
