@@ -8,17 +8,20 @@ et leur application aux endpoints d'authentification.
 from django.core.cache import cache
 from rest_framework import status
 from django.urls import reverse
+from django.test import TestCase
+from rest_framework.test import APIClient
 
-from .test_settings import MockedAPITestCase
+from .test_settings import MockedTestCase
 from .mocks import MockServices
 
 
-class ThrottlingTestCase(MockedAPITestCase):
+class ThrottlingTestCase(MockedTestCase):
     """Tests pour le système de throttling."""
 
     def setUp(self) -> None:
         """Configuration initiale pour les tests."""
         super().setUp()
+        self.client = APIClient()
         cache.clear()  # Vider le cache avant chaque test
 
         self.register_data = {

@@ -200,15 +200,24 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "500/hour",  # 500 requêtes par heure pour les utilisateurs anonymes
-        "user": "2000/hour",  # 2000 requêtes par heure pour les utilisateurs authentifiés
-        "login": "15/minute",  # 15 tentatives de connexion par minute
-        "register": "10/minute",  # 10 inscriptions par minute
-        "auth": "30/minute",  # 30 requêtes par minute pour tous les endpoints d'authentification
-        "burst": "50/second",  # 50 requêtes par seconde pour les pics de trafic
-        "activate": "20/minute",  # 20 tentatives d'activation par minute
-        "resend_code": "5/minute",  # 5 demandes de renvoi de code par minute
-        "phone_based": "10/hour",  # 10 requêtes par heure par numéro de téléphone
+        # Limite élevée pour les tests
+        "anon": "10000/hour" if os.getenv("DJANGO_TEST_MODE") else "500/hour",
+        # Limite élevée pour les tests
+        "user": "10000/hour" if os.getenv("DJANGO_TEST_MODE") else "2000/hour",
+        # Limite élevée pour les tests
+        "login": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "15/minute",
+        # Limite élevée pour les tests
+        "register": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "10/minute",
+        # Limite élevée pour les tests
+        "auth": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "30/minute",
+        # Limite élevée pour les tests
+        "burst": "1000/second" if os.getenv("DJANGO_TEST_MODE") else "50/second",
+        # Limite élevée pour les tests
+        "activate": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "20/minute",
+        # Limite élevée pour les tests
+        "resend_code": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "5/minute",
+        # Limite élevée pour les tests
+        "phone_based": "1000/hour" if os.getenv("DJANGO_TEST_MODE") else "10/hour",
     },
 }
 

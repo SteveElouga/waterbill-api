@@ -7,7 +7,7 @@ avec gestion des erreurs et documentation OpenAPI.
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 from drf_spectacular.utils import extend_schema
@@ -37,6 +37,21 @@ from .serializers import (
     TokenRefreshResponseSerializer,
     LogoutSerializer,
     LogoutResponseSerializer,
+    # Nouveaux serializers
+    PasswordForgotSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordChangeRequestSerializer,
+    PasswordChangeConfirmSerializer,
+    ProfileUpdateSerializer,
+    PhoneChangeRequestSerializer,
+    PhoneChangeConfirmSerializer,
+    PasswordForgotResponseSerializer,
+    PasswordResetConfirmResponseSerializer,
+    PasswordChangeRequestResponseSerializer,
+    PasswordChangeConfirmResponseSerializer,
+    ProfileUpdateResponseSerializer,
+    PhoneChangeRequestResponseSerializer,
+    PhoneChangeConfirmResponseSerializer,
 )
 from .services import AuthService, ActivationService, ResponseService
 
@@ -113,7 +128,8 @@ def register_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(message="Erreur interne du serveur"),
+            ResponseService.error_response(
+                message="Erreur interne du serveur"),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -195,7 +211,8 @@ def login_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(message="Erreur interne du serveur"),
+            ResponseService.error_response(
+                message="Erreur interne du serveur"),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -261,7 +278,8 @@ def profile_view(request: Request) -> Response:
     - Utilisateur déjà activé
     """,
     request=ActivateSerializer,
-    responses={200: ActivationResponseSerializer, 400: ErrorResponseSerializer},
+    responses={200: ActivationResponseSerializer,
+               400: ErrorResponseSerializer},
     tags=["Authentification"],
 )
 @api_view(["POST"])
@@ -317,7 +335,8 @@ def activate_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(message="Erreur interne du serveur"),
+            ResponseService.error_response(
+                message="Erreur interne du serveur"),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -394,7 +413,8 @@ def resend_code_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(message="Erreur interne du serveur"),
+            ResponseService.error_response(
+                message="Erreur interne du serveur"),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -417,7 +437,8 @@ def resend_code_view(request: Request) -> Response:
     - Refresh token blacklisté
     """,
     request=TokenRefreshSerializer,
-    responses={200: TokenRefreshResponseSerializer, 400: ErrorResponseSerializer},
+    responses={200: TokenRefreshResponseSerializer,
+               400: ErrorResponseSerializer},
     tags=["Authentification"],
 )
 @api_view(["POST"])
@@ -529,4 +550,598 @@ def logout_view(request: Request) -> Response:
                 message=f"Erreur lors de la déconnexion: {str(e)}"
             ),
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+# =============================================================================
+# NOUVELLES VUES POUR LES FONCTIONNALITÉS ÉTENDUES
+# =============================================================================
+
+@extend_schema(
+    summary="Demande de réinitialisation de mot de passe",
+    description="""
+    Demande une réinitialisation de mot de passe via SMS.
+    
+    **Endpoint:** `POST /api/auth/password/forgot/`
+    
+    **Comportement de sécurité :**
+    - Retourne toujours un succès (même si l'utilisateur n'existe pas)
+    - Envoie un SMS uniquement si l'utilisateur existe
+    - Utilise un token UUID pour la sécurité
+    
+    **Throttling :** `password_forgot` (5 req/min)
+    """,
+    request=PasswordForgotSerializer,
+    responses={
+        200: PasswordForgotResponseSerializer,
+        400: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+def password_forgot_view(request: Request) -> Response:
+    """
+    Demande de réinitialisation de mot de passe.
+
+    Args:
+        request: Requête HTTP contenant le numéro de téléphone
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PasswordForgotSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PasswordResetService
+
+        phone = serializer.validated_data["phone"]
+        result = PasswordResetService.request_password_reset(phone)
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={}  # Pas de données sensibles
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de réinitialisation",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Confirmation de réinitialisation de mot de passe",
+    description="""
+    Confirme la réinitialisation de mot de passe avec le code SMS.
+    
+    **Endpoint:** `POST /api/auth/password/reset/confirm/`
+    
+    **Processus :**
+    1. Vérification du token UUID
+    2. Validation du code SMS (6 chiffres)
+    3. Mise à jour du mot de passe
+    4. Invalidation du token (one-shot)
+    
+    **Throttling :** `password_reset_confirm` (3 req/min)
+    """,
+    request=PasswordResetConfirmSerializer,
+    responses={
+        200: PasswordResetConfirmResponseSerializer,
+        400: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+def password_reset_confirm_view(request: Request) -> Response:
+    """
+    Confirmation de réinitialisation de mot de passe.
+
+    Args:
+        request: Requête HTTP contenant token, code et nouveau mot de passe
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PasswordResetService
+
+        token_uuid = serializer.validated_data["token"]
+        code = serializer.validated_data["code"]
+        new_password = serializer.validated_data["new_password"]
+
+        result = PasswordResetService.confirm_password_reset(
+            token_uuid, code, new_password
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={}
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de confirmation",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Demande de changement de mot de passe",
+    description="""
+    Demande un changement de mot de passe (utilisateur authentifié).
+    
+    **Endpoint:** `POST /api/auth/password/change/request/`
+    
+    **Prérequis :**
+    - Utilisateur authentifié (JWT)
+    - Mot de passe actuel correct
+    
+    **Processus :**
+    1. Vérification du mot de passe actuel
+    2. Envoi d'un code SMS de vérification
+    3. Génération d'un token UUID
+    
+    **Throttling :** `password_change_request` (3 req/min)
+    """,
+    request=PasswordChangeRequestSerializer,
+    responses={
+        200: PasswordChangeRequestResponseSerializer,
+        400: ErrorResponseSerializer,
+        401: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AuthRateThrottle])
+def password_change_request_view(request: Request) -> Response:
+    """
+    Demande de changement de mot de passe.
+
+    Args:
+        request: Requête HTTP contenant le mot de passe actuel
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PasswordChangeRequestSerializer(
+        data=request.data,
+        context={'request': request}
+    )
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PasswordChangeService
+
+        current_password = serializer.validated_data["current_password"]
+        result = PasswordChangeService.request_password_change(
+            request.user, current_password
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={}  # Pas de données sensibles
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de demande",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Confirmation de changement de mot de passe",
+    description="""
+    Confirme le changement de mot de passe avec le code SMS.
+    
+    **Endpoint:** `POST /api/auth/password/change/confirm/`
+    
+    **Processus :**
+    1. Vérification du token UUID
+    2. Validation du code SMS (6 chiffres)
+    3. Mise à jour du mot de passe
+    4. Invalidation du token (one-shot)
+    
+    **Throttling :** `password_change_confirm` (3 req/min)
+    """,
+    request=PasswordChangeConfirmSerializer,
+    responses={
+        200: PasswordChangeConfirmResponseSerializer,
+        400: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+def password_change_confirm_view(request: Request) -> Response:
+    """
+    Confirmation de changement de mot de passe.
+
+    Args:
+        request: Requête HTTP contenant token, code et nouveau mot de passe
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PasswordChangeConfirmSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PasswordChangeService
+
+        token_uuid = serializer.validated_data["token"]
+        code = serializer.validated_data["code"]
+        new_password = serializer.validated_data["new_password"]
+
+        result = PasswordChangeService.confirm_password_change(
+            token_uuid, code, new_password
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={}
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de confirmation",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Mise à jour du profil utilisateur",
+    description="""
+    Met à jour les informations du profil utilisateur.
+    
+    **Endpoint:** `PUT /api/auth/me/`
+    
+    **Champs modifiables :**
+    - first_name (prénom)
+    - last_name (nom)
+    - email (adresse email)
+    - address (adresse physique)
+    - apartment_name (nom de l'appartement, max 3 caractères)
+    
+    **Prérequis :**
+    - Utilisateur authentifié (JWT)
+    
+    **Note :** Le numéro de téléphone ne peut pas être modifié via cet endpoint.
+    """,
+    request=ProfileUpdateSerializer,
+    responses={
+        200: ProfileUpdateResponseSerializer,
+        400: ErrorResponseSerializer,
+        401: ErrorResponseSerializer,
+    },
+    tags=["Profil"],
+)
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def profile_update_view(request: Request) -> Response:
+    """
+    Mise à jour du profil utilisateur.
+
+    Args:
+        request: Requête HTTP contenant les données du profil
+
+    Returns:
+        Response: Réponse JSON avec statut et données du profil
+    """
+    serializer = ProfileUpdateSerializer(
+        request.user,
+        data=request.data,
+        partial=True
+    )
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import ProfileService
+
+        result = ProfileService.update_profile(
+            request.user,
+            serializer.validated_data
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data=result["user"]
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de mise à jour",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Demande de changement de numéro de téléphone",
+    description="""
+    Demande un changement de numéro de téléphone.
+    
+    **Endpoint:** `POST /api/auth/phone/change/request/`
+    
+    **Prérequis :**
+    - Utilisateur authentifié (JWT)
+    - Nouveau numéro non utilisé
+    
+    **Processus :**
+    1. Vérification que le nouveau numéro n'est pas déjà utilisé
+    2. Envoi d'un code SMS sur le nouveau numéro
+    3. Génération d'un token UUID
+    
+    **Throttling :** `phone_change_request` (3 req/min)
+    """,
+    request=PhoneChangeRequestSerializer,
+    responses={
+        200: PhoneChangeRequestResponseSerializer,
+        400: ErrorResponseSerializer,
+        401: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+@throttle_classes([AuthRateThrottle])
+def phone_change_request_view(request: Request) -> Response:
+    """
+    Demande de changement de numéro de téléphone.
+
+    Args:
+        request: Requête HTTP contenant le nouveau numéro
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PhoneChangeRequestSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PhoneChangeService
+
+        new_phone = serializer.validated_data["new_phone"]
+        result = PhoneChangeService.request_phone_change(
+            request.user, new_phone
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={}  # Pas de données sensibles
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de demande",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    summary="Confirmation de changement de numéro de téléphone",
+    description="""
+    Confirme le changement de numéro de téléphone avec le code SMS.
+    
+    **Endpoint:** `POST /api/auth/phone/change/confirm/`
+    
+    **Processus :**
+    1. Vérification du token UUID
+    2. Validation du code SMS (6 chiffres)
+    3. Mise à jour du numéro de téléphone
+    4. Invalidation du token (one-shot)
+    
+    **Throttling :** `phone_change_confirm` (3 req/min)
+    """,
+    request=PhoneChangeConfirmSerializer,
+    responses={
+        200: PhoneChangeConfirmResponseSerializer,
+        400: ErrorResponseSerializer,
+        429: ErrorResponseSerializer,
+    },
+    tags=["Authentification"],
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+def phone_change_confirm_view(request: Request) -> Response:
+    """
+    Confirmation de changement de numéro de téléphone.
+
+    Args:
+        request: Requête HTTP contenant token et code
+
+    Returns:
+        Response: Réponse JSON avec statut et message
+    """
+    serializer = PhoneChangeConfirmSerializer(data=request.data)
+
+    if not serializer.is_valid():
+        return Response(
+            ResponseService.error_response(
+                message="Données invalides",
+                errors=serializer.errors,
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        from .services import PhoneChangeService
+
+        token_uuid = serializer.validated_data["token"]
+        code = serializer.validated_data["code"]
+
+        result = PhoneChangeService.confirm_phone_change(
+            token_uuid, code
+        )
+
+        return Response(
+            ResponseService.success_response(
+                message=result["message"],
+                data={"new_phone": result["new_phone"]}
+            ),
+            status=status.HTTP_200_OK,
+        )
+
+    except ValueError as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur de confirmation",
+                errors={"detail": str(e)},
+            ),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response(
+            ResponseService.error_response(
+                message="Erreur interne",
+                errors={"detail": "Une erreur inattendue s'est produite"},
+            ),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

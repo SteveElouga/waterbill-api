@@ -13,6 +13,7 @@
   - [🔧 Installation sélective](#-installation-sélective)
 - [🐳 Gestion Docker](#-gestion-docker)
 - [🛠️ Scripts et commandes automatisées](#️-scripts-et-commandes-automatisées)
+- [🧪 Tests et qualité](#-tests-et-qualité)
 - [🌐 Endpoints disponibles](#-endpoints-disponibles)
 - [🔧 Configuration](#-configuration)
   - [Variables d'environnement](#variables-denvironnement-env)
@@ -2075,6 +2076,80 @@ Les scripts gèrent automatiquement la valeur `DEBUG` selon le contexte :
 # Restaurer le fichier .env original (avec DEBUG=True) ? (y/N): y
 # ✅ Fichier .env restauré (DEBUG=True)
 ```
+
+---
+
+## 🧪 Tests et qualité
+
+### ⚠️ **IMPORTANT : Utilisation du script de test**
+
+**Les tests DOIVENT être lancés avec le script `./scripts/test.sh` et NON directement avec `pytest`.**
+
+Le script de test configure automatiquement l'environnement de test avec des limites de throttling élevées pour éviter les erreurs 429 (Too Many Requests) pendant l'exécution des tests.
+
+### 🧪 Script de test (`./scripts/test.sh`)
+
+#### Commandes disponibles
+
+```bash
+# Tests unitaires (exclut les tests de throttling)
+./scripts/test.sh unit
+
+# Tests d'intégration
+./scripts/test.sh integration
+
+# Rapport de couverture
+./scripts/test.sh coverage
+
+# Tests spécifiques
+./scripts/test.sh specific "users/tests/test_password_reset.py"
+
+# Tous les tests avec couverture
+./scripts/test.sh all
+
+# Mode watch (tests automatiques)
+./scripts/test.sh watch
+
+# Nettoyage des fichiers de test
+./scripts/test.sh clean
+```
+
+#### 🔧 Configuration automatique du throttling
+
+Le script configure automatiquement les limites de throttling pour les tests :
+
+| Endpoint      | Mode Normal | Mode Test   | Amélioration        |
+| ------------- | ----------- | ----------- | ------------------- |
+| `auth`        | 30/minute   | 1000/minute | **33x plus élevé**  |
+| `login`       | 15/minute   | 1000/minute | **67x plus élevé**  |
+| `register`    | 10/minute   | 1000/minute | **100x plus élevé** |
+| `activate`    | 20/minute   | 1000/minute | **50x plus élevé**  |
+| `resend_code` | 5/minute    | 1000/minute | **200x plus élevé** |
+
+#### 🚫 Tests de throttling exclus
+
+Les tests de throttling (`test_throttling.py`) sont automatiquement exclus du mode test pour conserver leur comportement de throttling normal et valider le système de sécurité.
+
+### 📊 Couverture de code
+
+Le projet maintient une couverture de code élevée avec **228 tests** couvrant :
+
+- ✅ **Authentification** : Inscription, connexion, activation SMS
+- ✅ **Gestion des mots de passe** : Reset, changement sécurisé
+- ✅ **Profil utilisateur** : Mise à jour, validation
+- ✅ **Changement de numéro** : Vérification SMS, unicité
+- ✅ **Throttling** : Limites de sécurité, protection DDoS
+- ✅ **Services externes** : Mocking automatique des SMS
+- ✅ **Validation** : Numéros de téléphone, mots de passe
+- ✅ **Sécurité** : Tokens JWT, codes SMS hashés
+
+### 🎯 Bonnes pratiques de test
+
+1. **Utiliser le script** : Toujours utiliser `./scripts/test.sh` au lieu de `pytest` directement
+2. **Tests isolés** : Chaque test est indépendant avec des mocks automatiques
+3. **Validation complète** : Tests des cas de succès ET d'échec
+4. **Sécurité** : Tests de throttling et de validation des données
+5. **Mocking** : Services externes (SMS) automatiquement mockés
 
 #### Restauration manuelle
 

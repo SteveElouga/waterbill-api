@@ -23,4 +23,21 @@ urlpatterns = [
     path("resend-code/", views.resend_code_view, name="resend_code"),
     # Profil utilisateur
     path("profile/", views.profile_view, name="profile"),
+    # Nouvelles fonctionnalités
+    # Mot de passe oublié
+    path("password/forgot/", views.password_forgot_view, name="password_forgot"),
+    path("password/reset/confirm/", views.password_reset_confirm_view,
+         name="password_reset_confirm"),
+    # Changement de mot de passe
+    path("password/change/request/", views.password_change_request_view,
+         name="password_change_request"),
+    path("password/change/confirm/", views.password_change_confirm_view,
+         name="password_change_confirm"),
+    # Mise à jour du profil
+    path("me/", views.profile_update_view, name="profile_update"),
+    # Changement de numéro
+    path("phone/change/request/", views.phone_change_request_view,
+         name="phone_change_request"),
+    path("phone/change/confirm/", views.phone_change_confirm_view,
+         name="phone_change_confirm"),
 ]

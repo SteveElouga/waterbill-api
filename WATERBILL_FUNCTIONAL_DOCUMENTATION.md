@@ -457,11 +457,25 @@ La déconnexion utilise un système de blacklist pour garantir la sécurité :
 
 #### **🚨 Protection contre les attaques**
 
-- **Brute force** : Throttling multi-niveaux
-- **DDoS** : Limitation par IP et utilisateur
+- **Brute force** : Throttling multi-niveaux avec limites configurables
+- **DDoS** : Limitation par IP et utilisateur avec système de quotas
 - **Injection SQL** : ORM Django avec paramètres sécurisés
 - **XSS** : Échappement automatique des données
 - **CSRF** : Protection Django REST Framework
+
+#### **⚡ Système de throttling intelligent**
+
+Le système implémente un throttling multi-niveaux pour protéger contre les attaques :
+
+| Endpoint         | Limite Production | Limite Test | Protection  |
+| ---------------- | ----------------- | ----------- | ----------- |
+| `login`          | 15/minute         | 1000/minute | Brute force |
+| `register`       | 10/minute         | 1000/minute | Spam        |
+| `activate`       | 20/minute         | 1000/minute | Flood SMS   |
+| `resend_code`    | 5/minute          | 1000/minute | Coût SMS    |
+| `auth` (général) | 30/minute         | 1000/minute | DDoS        |
+
+**Configuration automatique** : Les tests utilisent des limites élevées via `DJANGO_TEST_MODE=1` pour éviter les erreurs 429 pendant l'exécution.
 
 #### **📊 Audit et logging**
 

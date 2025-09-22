@@ -1,5 +1,11 @@
 # 🧪 Documentation des Mocks pour Tests Unitaires
 
+## ⚠️ **IMPORTANT : Utilisation du script de test**
+
+**Les tests DOIVENT être lancés avec le script `./scripts/test.sh` et NON directement avec `pytest`.**
+
+Le script configure automatiquement les mocks et les limites de throttling pour une expérience de test optimale.
+
 ## 📋 Vue d'ensemble
 
 WaterBill utilise un système de mocks sophistiqué pour isoler complètement les tests unitaires des services externes, garantissant des tests déterministes, rapides et reproductibles.
@@ -235,6 +241,44 @@ pip install pytest-cov==6.0.0
 
 # Tests spécifiques
 ./scripts/test.sh specific users/tests/test_services.py
+```
+
+## 🚀 Utilisation avec le script de test
+
+### ⚠️ **IMPORTANT : Utiliser le script de test**
+
+```bash
+# ✅ CORRECT - Utiliser le script de test
+./scripts/test.sh unit
+./scripts/test.sh specific "users/tests/test_password_reset.py"
+
+# ❌ INCORRECT - Ne pas utiliser pytest directement
+pytest users/tests/
+```
+
+### 🔧 Configuration automatique
+
+Le script `./scripts/test.sh` configure automatiquement :
+
+1. **Mocks automatiques** : Services externes mockés
+2. **Limites de throttling élevées** : Évite les erreurs 429
+3. **Environnement de test** : Variables d'environnement optimisées
+4. **Exclusion intelligente** : Tests de throttling préservés
+
+### 📊 Exemples d'utilisation
+
+```bash
+# Tests unitaires avec mocks automatiques
+./scripts/test.sh unit
+
+# Test d'une fonctionnalité spécifique
+./scripts/test.sh specific "users/tests/test_password_reset.py"
+
+# Tests de throttling (sans mode test)
+./scripts/test.sh specific "users/tests/test_throttling.py"
+
+# Tous les tests avec couverture
+./scripts/test.sh all
 ```
 
 ## 📝 Bonnes pratiques

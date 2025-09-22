@@ -50,20 +50,21 @@ fi
 case "$1" in
     unit)
         echo -e "${GREEN}🧪 Lancement des tests unitaires...${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest --tb=short -v
+        # Exclure les tests de throttling du mode test
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v -k 'not throttling'"
         ;;
     integration)
         echo -e "${GREEN}🔗 Lancement des tests d'intégration...${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest --tb=short -v -m integration
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v -m integration"
         ;;
     coverage)
         echo -e "${GREEN}📊 Génération du rapport de couverture...${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest --cov=. --cov-report=html --cov-report=term
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --cov=. --cov-report=html --cov-report=term"
         echo -e "${GREEN}✅ Rapport de couverture généré dans htmlcov/${NC}"
         ;;
     watch)
         echo -e "${GREEN}👀 Mode watch - Tests automatiques sur modification...${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest-watch -- --tb=short
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest-watch -- --tb=short"
         ;;
     specific)
         if [ -z "$2" ]; then
@@ -72,11 +73,17 @@ case "$1" in
             exit 1
         fi
         echo -e "${GREEN}🎯 Lancement des tests spécifiques: $2${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest --tb=short -v "$2"
+        # Vérifier si c'est un test de throttling
+        if [[ "$2" == *"throttling"* ]]; then
+            echo -e "${YELLOW}⚠️  Test de throttling détecté - Mode test désactivé${NC}"
+            docker-compose $COMPOSE_FILES exec web bash -c "pytest --tb=short -v $2"
+        else
+            docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v $2"
+        fi
         ;;
     all)
         echo -e "${GREEN}🚀 Lancement de tous les tests...${NC}"
-        docker-compose $COMPOSE_FILES exec web pytest --tb=short -v --cov=. --cov-report=html --cov-report=term
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v --cov=. --cov-report=html --cov-report=term"
         echo -e "${GREEN}✅ Tous les tests terminés. Rapport de couverture dans htmlcov/${NC}"
         ;;
     clean)

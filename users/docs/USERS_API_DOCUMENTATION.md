@@ -727,6 +727,19 @@ Ce code expire dans 10 minutes. Ne partagez pas ce code.
 
 ## 🧪 Tests
 
+### ⚠️ **IMPORTANT : Utilisation du script de test**
+
+**Les tests DOIVENT être lancés avec le script `./scripts/test.sh` et NON directement avec `pytest`.**
+
+```bash
+# ✅ CORRECT - Utiliser le script de test
+./scripts/test.sh unit
+./scripts/test.sh specific "users/tests/test_password_reset.py"
+
+# ❌ INCORRECT - Ne pas utiliser pytest directement
+pytest users/tests/
+```
+
 ### **📁 Structure des tests**
 
 ```
@@ -740,12 +753,25 @@ users/tests/
 ├── 📄 test_activation.py          # Tests du système d'activation SMS
 ├── 📄 test_atomic_registration.py # Tests de l'atomicité de l'inscription
 ├── 📄 test_international_phone.py # Tests du format international
+├── 📄 test_password_reset.py      # Tests de réinitialisation de mot de passe
+├── 📄 test_password_change.py     # Tests de changement de mot de passe
+├── 📄 test_profile_update.py      # Tests de mise à jour du profil
+├── 📄 test_phone_change.py        # Tests de changement de numéro
 └── 📄 test_token_management.py    # Tests de gestion des tokens JWT
 ```
 
 ### **🎯 Tests unitaires avec mocks**
 
 WaterBill utilise un système de tests unitaires robustes avec des mocks pour isoler complètement les tests des services externes.
+
+### **🔧 Configuration automatique du script**
+
+Le script `./scripts/test.sh` configure automatiquement :
+
+1. **Mocks automatiques** : Services externes (SMS) mockés
+2. **Limites de throttling élevées** : Évite les erreurs 429
+3. **Environnement de test** : Variables d'environnement optimisées
+4. **Exclusion intelligente** : Tests de throttling préservés
 
 #### **Avantages des mocks :**
 
