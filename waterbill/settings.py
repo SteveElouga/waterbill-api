@@ -212,17 +212,25 @@ REST_FRAMEWORK = {
         # Limite élevée pour les tests
         "login": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "15/minute",
         # Limite élevée pour les tests
-        "register": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/minute",
+        "register": (
+            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/minute"
+        ),
         # Limite élevée pour les tests
         "auth": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "30/minute",
         # Limite élevée pour les tests
         "burst": TEST_THROTTLE_SECOND if os.getenv("DJANGO_TEST_MODE") else "50/second",
         # Limite élevée pour les tests
-        "activate": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "20/minute",
+        "activate": (
+            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "20/minute"
+        ),
         # Limite élevée pour les tests
-        "resend_code": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "5/minute",
+        "resend_code": (
+            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "5/minute"
+        ),
         # Limite élevée pour les tests
-        "phone_based": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/hour",
+        "phone_based": (
+            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/hour"
+        ),
     },
 }
 

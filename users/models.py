@@ -30,8 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text="Numéro de téléphone unique (ex: +237670000000)",
     )
-    first_name = models.CharField(
-        max_length=150, help_text="Prénom de l'utilisateur")
+    first_name = models.CharField(max_length=150, help_text="Prénom de l'utilisateur")
     last_name = models.CharField(
         max_length=150, help_text="Nom de famille de l'utilisateur"
     )
@@ -145,8 +144,7 @@ class VerificationToken(models.Model):
     )
 
     # Code SMS hashé
-    code_hash = models.CharField(
-        max_length=64, help_text="Hash SHA256 du code SMS")
+    code_hash = models.CharField(max_length=64, help_text="Hash SHA256 du code SMS")
 
     # Expiration
     expires_at = models.DateTimeField(
@@ -170,8 +168,7 @@ class VerificationToken(models.Model):
     is_locked = models.BooleanField(
         default=False, help_text="Token verrouillé après 5 tentatives échouées"
     )
-    is_used = models.BooleanField(
-        default=False, help_text="Token utilisé (one-shot)")
+    is_used = models.BooleanField(default=False, help_text="Token utilisé (one-shot)")
 
     # Métadonnées
     created_at = models.DateTimeField(

@@ -55,8 +55,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         with patch("users.services.ProfileService.update_profile") as mock_service:
             mock_service.return_value = {
@@ -85,8 +84,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         # Mettre à jour seulement le prénom
         partial_data = {"first_name": "NewFirst"}
@@ -125,8 +123,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {"email": "invalid-email"}
 
@@ -149,8 +146,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {"email": "other@example.com"}
 
@@ -165,8 +161,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {"apartment_name": "ABCD"}  # Plus de 3 caractères
 
@@ -181,8 +176,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {}
 
@@ -212,8 +206,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         url = reverse("users:profile_update")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {"phone": "+237999999999"}
 

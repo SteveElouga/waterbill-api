@@ -294,8 +294,7 @@ class TokenSerializer(serializers.Serializer):
 class AuthResponseSerializer(serializers.Serializer):
     """Serializer pour les réponses d'authentification."""
 
-    status = serializers.CharField(
-        help_text="Statut de la réponse (success/error)")
+    status = serializers.CharField(help_text="Statut de la réponse (success/error)")
     message = serializers.CharField(help_text="Message descriptif")
     data = serializers.DictField(help_text="Données de la réponse")
 
@@ -330,8 +329,7 @@ class LoginResponseSerializer(serializers.Serializer):
 class ProfileDataSerializer(serializers.Serializer):
     """Serializer pour les données de profil."""
 
-    user = UserSerializer(
-        help_text="Informations complètes du profil utilisateur")
+    user = UserSerializer(help_text="Informations complètes du profil utilisateur")
 
 
 class ProfileResponseSerializer(serializers.Serializer):
@@ -500,16 +498,14 @@ class TokenRefreshSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError(
-                "Le refresh token est obligatoire.")
+            raise serializers.ValidationError("Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
 
             RefreshToken(value)
         except Exception:
-            raise serializers.ValidationError(
-                "Refresh token invalide ou expiré.")
+            raise serializers.ValidationError("Refresh token invalide ou expiré.")
 
         return value
 
@@ -545,8 +541,7 @@ class LogoutSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError(
-                "Le refresh token est obligatoire.")
+            raise serializers.ValidationError("Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
@@ -645,8 +640,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"new_password": list(e.messages)})
+            raise serializers.ValidationError({"new_password": list(e.messages)})
 
         return attrs
 
@@ -664,8 +658,7 @@ class PasswordChangeRequestSerializer(serializers.Serializer):
         """Valide le mot de passe actuel."""
         user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError(
-                "Le mot de passe actuel est incorrect.")
+            raise serializers.ValidationError("Le mot de passe actuel est incorrect.")
         return value
 
 
@@ -674,8 +667,7 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de mot de passe.
     """
 
-    token = serializers.UUIDField(
-        help_text="Token UUID de changement de mot de passe")
+    token = serializers.UUIDField(help_text="Token UUID de changement de mot de passe")
     code = serializers.CharField(
         max_length=6, min_length=6, help_text=CODE_SMS_HELP_TEXT
     )
@@ -706,8 +698,7 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"new_password": list(e.messages)})
+            raise serializers.ValidationError({"new_password": list(e.messages)})
 
         return attrs
 
@@ -719,8 +710,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name",
-                  "email", "address", "apartment_name"]
+        fields = ["first_name", "last_name", "email", "address", "apartment_name"]
 
     def validate_email(self, value):
         """Valide l'email s'il est fourni."""
@@ -728,8 +718,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             value
             and User.objects.filter(email=value).exclude(id=self.instance.id).exists()
         ):
-            raise serializers.ValidationError(
-                "Cette adresse email est déjà utilisée.")
+            raise serializers.ValidationError("Cette adresse email est déjà utilisée.")
         return value
 
     def validate_apartment_name(self, value):
@@ -775,8 +764,7 @@ class PhoneChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de numéro de téléphone.
     """
 
-    token = serializers.UUIDField(
-        help_text="Token UUID de changement de numéro")
+    token = serializers.UUIDField(help_text="Token UUID de changement de numéro")
     code = serializers.CharField(
         max_length=6, min_length=6, help_text=CODE_SMS_HELP_TEXT
     )
