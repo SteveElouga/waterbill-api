@@ -1017,6 +1017,7 @@ waterbill/
 #### 🆕 **Changements récents - Améliorations des tests et de la qualité**
 
 **Script de qualité (`quality.sh`) :**
+
 - **✅ Exécution locale** : Plus besoin de Docker pour les contrôles de qualité
 - **✅ Fallback pip-audit** : Si `safety` échoue, utilise automatiquement `pip-audit`
 - **✅ Suppression MyPy** : Plus de vérification de types (conflits résolus)
@@ -1024,6 +1025,7 @@ waterbill/
 - **✅ Gestion d'erreurs** : Continue même si un outil échoue
 
 **Système de tests amélioré :**
+
 - **✅ Mocks automatiques** : Configuration globale pour tous les tests (162 tests)
 - **✅ Fixture Pytest** : `conftest.py` avec mocks automatiques
 - **✅ Classes de base** : `MockedTestCase` et `MockedAPITestCase`
@@ -1031,6 +1033,7 @@ waterbill/
 - **✅ Dépendance ajoutée** : `argon2-cffi==25.1.0` pour le hachage des mots de passe
 
 **Corrections récentes :**
+
 - **✅ Email pgAdmin corrigé** : `admin@example.com` au lieu de `admin@waterbill.local`
 - **✅ Fichiers requirements nettoyés** : Séparation claire prod/dev
 - **✅ Dockerfiles mis à jour** : Utilisation des dépendances séparées
@@ -1385,6 +1388,7 @@ WaterBill utilise un système de tests unitaires robustes avec des mocks pour is
 Le système utilise deux approches complémentaires pour garantir que tous les services externes sont mockés :
 
 **1. Fixture Pytest globale (`users/tests/conftest.py`) :**
+
 ```python
 @pytest.fixture(autouse=True)
 def mock_external_services():
@@ -1394,6 +1398,7 @@ def mock_external_services():
 ```
 
 **2. Classes de base pour Django TestCase (`users/tests/test_settings.py`) :**
+
 ```python
 class MockedTestCase(TestCase):
     """Classe de base pour les tests Django TestCase avec mocks automatiques."""
