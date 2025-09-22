@@ -107,24 +107,24 @@ class VerificationToken(models.Model):
 
     # Types de vérification supportés
     VERIFICATION_TYPES = [
-        ('activation', 'Activation de compte'),
-        ('password_reset', 'Réinitialisation de mot de passe'),
-        ('password_change', 'Changement de mot de passe'),
-        ('phone_change', 'Changement de numéro de téléphone'),
+        ("activation", "Activation de compte"),
+        ("password_reset", "Réinitialisation de mot de passe"),
+        ("password_change", "Changement de mot de passe"),
+        ("phone_change", "Changement de numéro de téléphone"),
     ]
 
     # UUID unique pour l'identification du token
     token = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text="UUID unique du token de vérification"
+        help_text="UUID unique du token de vérification",
     )
 
     # Type de vérification
     verification_type = models.CharField(
         max_length=20,
         choices=VERIFICATION_TYPES,
-        help_text="Type de vérification demandée"
+        help_text="Type de vérification demandée",
     )
 
     # Utilisateur associé (peut être null pour password_reset si user n'existe pas)
@@ -134,22 +134,19 @@ class VerificationToken(models.Model):
         related_name="verification_tokens",
         null=True,
         blank=True,
-        help_text="Utilisateur associé au token"
+        help_text="Utilisateur associé au token",
     )
 
     # Numéro de téléphone pour les cas où user est null
     phone = models.CharField(
         max_length=15,
-        null=True,
         blank=True,
-        help_text="Numéro de téléphone pour password_reset"
+        help_text="Numéro de téléphone pour password_reset",
     )
 
     # Code SMS hashé
     code_hash = models.CharField(
-        max_length=64,
-        help_text="Hash SHA256 du code SMS"
-    )
+        max_length=64, help_text="Hash SHA256 du code SMS")
 
     # Expiration
     expires_at = models.DateTimeField(
@@ -158,8 +155,7 @@ class VerificationToken(models.Model):
 
     # Limitation des tentatives
     attempts = models.PositiveIntegerField(
-        default=0,
-        help_text="Nombre de tentatives de vérification (max 5)"
+        default=0, help_text="Nombre de tentatives de vérification (max 5)"
     )
 
     # Gestion des envois
@@ -167,28 +163,22 @@ class VerificationToken(models.Model):
         help_text="Dernière fois que le code a été envoyé"
     )
     send_count = models.PositiveIntegerField(
-        default=1,
-        help_text="Nombre d'envois aujourd'hui (max 5/24h)"
+        default=1, help_text="Nombre d'envois aujourd'hui (max 5/24h)"
     )
 
     # État du token
     is_locked = models.BooleanField(
-        default=False,
-        help_text="Token verrouillé après 5 tentatives échouées"
+        default=False, help_text="Token verrouillé après 5 tentatives échouées"
     )
     is_used = models.BooleanField(
-        default=False,
-        help_text="Token utilisé (one-shot)"
-    )
+        default=False, help_text="Token utilisé (one-shot)")
 
     # Métadonnées
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Date de création du token"
+        auto_now_add=True, help_text="Date de création du token"
     )
     updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="Date de dernière modification"
+        auto_now=True, help_text="Date de dernière modification"
     )
 
     class Meta:
@@ -197,16 +187,18 @@ class VerificationToken(models.Model):
         verbose_name_plural = "Tokens de vérification"
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['token']),
-            models.Index(fields=['verification_type', 'user']),
-            models.Index(fields=['phone']),
-            models.Index(fields=['expires_at']),
+            models.Index(fields=["token"]),
+            models.Index(fields=["verification_type", "user"]),
+            models.Index(fields=["phone"]),
+            models.Index(fields=["expires_at"]),
         ]
 
     def __str__(self) -> str:
         """Représentation string du token."""
         user_info = self.user.phone if self.user else self.phone
-        return f"Token {self.verification_type} pour {user_info} (exp: {self.expires_at})"
+        return (
+            f"Token {self.verification_type} pour {user_info} (exp: {self.expires_at})"
+        )
 
     @classmethod
     def generate_code(cls) -> str:
@@ -233,10 +225,7 @@ class VerificationToken(models.Model):
 
     @classmethod
     def create_token(
-        cls,
-        verification_type: str,
-        user: User = None,
-        phone: str = None
+        cls, verification_type: str, user: User = None, phone: str = None
     ) -> "VerificationToken":
         """
         Crée un nouveau token de vérification.
@@ -258,15 +247,11 @@ class VerificationToken(models.Model):
         # Supprimer les anciens tokens du même type pour cet utilisateur/numéro
         if user:
             cls.objects.filter(
-                verification_type=verification_type,
-                user=user,
-                is_used=False
+                verification_type=verification_type, user=user, is_used=False
             ).delete()
         else:
             cls.objects.filter(
-                verification_type=verification_type,
-                phone=phone,
-                is_used=False
+                verification_type=verification_type, phone=phone, is_used=False
             ).delete()
 
         # Générer un nouveau code

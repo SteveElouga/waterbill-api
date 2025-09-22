@@ -27,9 +27,11 @@ class MockedTestCase(TestCase):
 
         # Patcher les services externes
         self.sms_patcher = patch(
-            "users.gateways.sms.get_sms_gateway", return_value=self.mock_sms)
+            "users.gateways.sms.get_sms_gateway", return_value=self.mock_sms
+        )
         self.services_patcher = patch(
-            "users.services.get_sms_gateway", return_value=self.mock_sms)
+            "users.services.get_sms_gateway", return_value=self.mock_sms
+        )
         self.twilio_patcher = patch("users.gateways.sms.TwilioSmsGateway")
 
         # Démarrer les patches
@@ -43,11 +45,11 @@ class MockedTestCase(TestCase):
         super().tearDown()
 
         # Arrêter les patches s'ils existent
-        if hasattr(self, 'sms_patcher'):
+        if hasattr(self, "sms_patcher"):
             self.sms_patcher.stop()
-        if hasattr(self, 'services_patcher'):
+        if hasattr(self, "services_patcher"):
             self.services_patcher.stop()
-        if hasattr(self, 'twilio_patcher'):
+        if hasattr(self, "twilio_patcher"):
             self.twilio_patcher.stop()
 
 
@@ -62,4 +64,5 @@ class MockedAPITestCase(MockedTestCase):
         """Configuration avec client API."""
         super().setUp()
         from rest_framework.test import APIClient
+
         self.client = APIClient()

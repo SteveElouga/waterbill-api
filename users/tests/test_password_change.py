@@ -5,7 +5,6 @@ Ce module teste les fonctionnalités de changement de mot de passe
 pour utilisateurs authentifiés via SMS.
 """
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -30,7 +29,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="oldpassword123"
+            password="oldpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -40,15 +39,13 @@ class PasswordChangeTestCase(MockedAPITestCase):
         self.access_token = str(refresh.access_token)
 
         # Données de test
-        self.request_data = {
-            "current_password": "oldpassword123"
-        }
+        self.request_data = {"current_password": "oldpassword123"}
 
         self.confirm_data = {
             "token": "",
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
     def test_password_change_request_success(self):
@@ -56,13 +53,14 @@ class PasswordChangeTestCase(MockedAPITestCase):
         url = reverse("users:password_change_request")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
-        with patch('users.services.PasswordChangeService.request_password_change') as mock_service:
+        with patch(
+            "users.services.PasswordChangeService.request_password_change"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Un code de vérification a été envoyé par SMS."
+                "message": "Un code de vérification a été envoyé par SMS.",
             }
 
             response = self.client.post(url, self.request_data, format="json")
@@ -77,14 +75,16 @@ class PasswordChangeTestCase(MockedAPITestCase):
         url = reverse("users:password_change_request")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {"current_password": "wrongpassword"}
 
-        with patch('users.services.PasswordChangeService.request_password_change') as mock_service:
+        with patch(
+            "users.services.PasswordChangeService.request_password_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Le mot de passe actuel est incorrect")
+                "Le mot de passe actuel est incorrect"
+            )
 
             response = self.client.post(url, data, format="json")
 
@@ -105,8 +105,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
         url = reverse("users:password_change_request")
 
         # Authentifier la requête
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
         data = {}
 
@@ -119,18 +118,19 @@ class PasswordChangeTestCase(MockedAPITestCase):
         """Test de confirmation de changement de mot de passe réussie."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_change',
-            user=self.user
+            verification_type="password_change", user=self.user
         )
 
         url = reverse("users:password_change_confirm")
 
         self.confirm_data["token"] = str(token.token)
 
-        with patch('users.services.PasswordChangeService.confirm_password_change') as mock_service:
+        with patch(
+            "users.services.PasswordChangeService.confirm_password_change"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Votre mot de passe a été changé avec succès."
+                "message": "Votre mot de passe a été changé avec succès.",
             }
 
             response = self.client.post(url, self.confirm_data, format="json")
@@ -149,9 +149,12 @@ class PasswordChangeTestCase(MockedAPITestCase):
 
         self.confirm_data["token"] = "00000000-0000-0000-0000-000000000000"
 
-        with patch('users.services.PasswordChangeService.confirm_password_change') as mock_service:
+        with patch(
+            "users.services.PasswordChangeService.confirm_password_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Token de changement invalide ou expiré")
+                "Token de changement invalide ou expiré"
+            )
 
             response = self.client.post(url, self.confirm_data, format="json")
 
@@ -163,8 +166,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
         """Test de confirmation avec code invalide."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_change',
-            user=self.user
+            verification_type="password_change", user=self.user
         )
 
         url = reverse("users:password_change_confirm")
@@ -172,9 +174,12 @@ class PasswordChangeTestCase(MockedAPITestCase):
         self.confirm_data["token"] = str(token.token)
         self.confirm_data["code"] = "000000"  # Code incorrect
 
-        with patch('users.services.PasswordChangeService.confirm_password_change') as mock_service:
+        with patch(
+            "users.services.PasswordChangeService.confirm_password_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Code de vérification incorrect ou expiré")
+                "Code de vérification incorrect ou expiré"
+            )
 
             response = self.client.post(url, self.confirm_data, format="json")
 
@@ -190,7 +195,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "differentpassword123"
+            "new_password_confirm": "differentpassword123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -207,7 +212,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "123456",
             "new_password": "123",  # Mot de passe trop court
-            "new_password_confirm": "123"
+            "new_password_confirm": "123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -237,7 +242,7 @@ class PasswordChangeTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "12345",  # Code trop court
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -260,7 +265,7 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="oldpassword123"
+            password="oldpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -269,7 +274,7 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
         """Test de demande de changement de mot de passe réussie."""
         from users.services import PasswordChangeService
 
-        with patch('users.services.get_sms_gateway') as mock_gateway:
+        with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
             mock_sms.send_activation_code.return_value = True
             mock_gateway.return_value = mock_sms
@@ -284,8 +289,7 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
             # Vérifier qu'un token a été créé
             token = VerificationToken.objects.get(
-                verification_type='password_change',
-                user=self.user
+                verification_type="password_change", user=self.user
             )
             self.assertIsNotNone(token)
             # Vérifier que le SMS a été envoyé
@@ -299,9 +303,7 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
         from users.services import PasswordChangeService
 
         with self.assertRaises(ValueError) as context:
-            PasswordChangeService.request_password_change(
-                self.user, "wrongpassword"
-            )
+            PasswordChangeService.request_password_change(self.user, "wrongpassword")
 
         self.assertIn("incorrect", str(context.exception))
 
@@ -311,12 +313,11 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_change',
-            user=self.user
+            verification_type="password_change", user=self.user
         )
 
         # Simuler un code correct en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=True):
+        with patch.object(VerificationToken, "verify_code", return_value=True):
             result = PasswordChangeService.confirm_password_change(
                 str(token.token), "123456", "newpassword123"
             )
@@ -349,12 +350,11 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_change',
-            user=self.user
+            verification_type="password_change", user=self.user
         )
 
         # Simuler un code incorrect
-        with patch.object(token, 'verify_code', return_value=False):
+        with patch.object(token, "verify_code", return_value=False):
             with self.assertRaises(ValueError) as context:
                 PasswordChangeService.confirm_password_change(
                     str(token.token), "000000", "newpassword123"
@@ -368,12 +368,11 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_change',
-            user=self.user
+            verification_type="password_change", user=self.user
         )
 
         # Simuler un token expiré
-        with patch.object(token, 'verify_code', return_value=False):
+        with patch.object(token, "verify_code", return_value=False):
             with self.assertRaises(ValueError) as context:
                 PasswordChangeService.confirm_password_change(
                     str(token.token), "123456", "newpassword123"

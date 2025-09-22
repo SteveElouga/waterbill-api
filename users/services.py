@@ -17,6 +17,11 @@ from .gateways.sms import get_sms_gateway
 
 logger = logging.getLogger(__name__)
 
+# Constantes pour les messages d'erreur
+SMS_SEND_FAILED_ERROR = "Échec de l'envoi du SMS"
+CODE_VERIFICATION_ERROR = "Code de vérification incorrect ou expiré"
+USER_TOKEN_NOT_FOUND_ERROR = "Utilisateur associé au token introuvable"
+
 
 class AuthService:
     """
@@ -283,7 +288,7 @@ class ActivationService:
 
             # Essayer d'envoyer le SMS AVANT de créer le token
             if not sms_gateway.send_activation_code(user.phone, code):
-                raise ValueError("Échec de l'envoi du SMS")
+                raise ValueError(SMS_SEND_FAILED_ERROR)
 
             # Si l'envoi SMS réussit, créer le token d'activation
             token = ActivationToken.create_token(user)
@@ -417,7 +422,7 @@ class ActivationService:
             # Envoyer le SMS
             sms_gateway = get_sms_gateway()
             if not sms_gateway.send_activation_code(user.phone, code):
-                raise ValueError("Échec de l'envoi du SMS")
+                raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(f"Code d'activation renvoyé à {user.phone}")
 
@@ -478,6 +483,7 @@ class RateLimitService:
 # NOUVEAUX SERVICES POUR LES FONCTIONNALITÉS ÉTENDUES
 # =============================================================================
 
+
 class PasswordResetService:
     """
     Service pour la réinitialisation de mot de passe.
@@ -511,14 +517,14 @@ class PasswordResetService:
                     f"Demande de reset pour numéro inexistant: {phone}")
                 return {
                     "success": True,
-                    "message": "Si ce numéro est associé à un compte, vous recevrez un SMS."
+                    "message": "Si ce numéro est associé à un compte, vous recevrez un SMS.",
                 }
 
             # Créer un token de réinitialisation
             from .models import VerificationToken
+
             token = VerificationToken.create_token(
-                verification_type='password_reset',
-                user=user
+                verification_type="password_reset", user=user
             )
 
             # Générer le code et l'envoyer
@@ -529,14 +535,14 @@ class PasswordResetService:
             # Envoyer le SMS
             sms_gateway = get_sms_gateway()
             if not sms_gateway.send_activation_code(phone, code):
-                raise ValueError("Échec de l'envoi du SMS")
+                raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(f"Code de réinitialisation envoyé à {phone}")
 
             return {
                 "success": True,
                 "message": "Un code de réinitialisation a été envoyé par SMS.",
-                "token": str(token.token)
+                "token": str(token.token),
             }
 
         except ValueError:
@@ -547,7 +553,9 @@ class PasswordResetService:
                 f"Erreur lors de la demande de réinitialisation: {str(e)}")
 
     @staticmethod
-    def confirm_password_reset(token_uuid: str, code: str, new_password: str) -> Dict[str, Any]:
+    def confirm_password_reset(
+        token_uuid: str, code: str, new_password: str
+    ) -> Dict[str, Any]:
         """
         Confirme la réinitialisation de mot de passe.
 
@@ -568,9 +576,7 @@ class PasswordResetService:
             # Récupérer le token
             try:
                 token = VerificationToken.objects.get(
-                    token=token_uuid,
-                    verification_type='password_reset',
-                    is_used=False
+                    token=token_uuid, verification_type="password_reset", is_used=False
                 )
             except VerificationToken.DoesNotExist:
                 raise ValueError(
@@ -578,11 +584,11 @@ class PasswordResetService:
 
             # Vérifier le code
             if not token.verify_code(code):
-                raise ValueError("Code de vérification incorrect ou expiré")
+                raise ValueError(CODE_VERIFICATION_ERROR)
 
             # Vérifier que l'utilisateur existe
             if not token.user:
-                raise ValueError("Utilisateur associé au token introuvable")
+                raise ValueError(USER_TOKEN_NOT_FOUND_ERROR)
 
             # Changer le mot de passe
             token.user.set_password(new_password)
@@ -595,7 +601,7 @@ class PasswordResetService:
 
             return {
                 "success": True,
-                "message": "Votre mot de passe a été réinitialisé avec succès."
+                "message": "Votre mot de passe a été réinitialisé avec succès.",
             }
 
         except ValueError:
@@ -635,9 +641,9 @@ class PasswordChangeService:
 
             # Créer un token de changement
             from .models import VerificationToken
+
             token = VerificationToken.create_token(
-                verification_type='password_change',
-                user=user
+                verification_type="password_change", user=user
             )
 
             # Générer le code et l'envoyer
@@ -648,7 +654,7 @@ class PasswordChangeService:
             # Envoyer le SMS
             sms_gateway = get_sms_gateway()
             if not sms_gateway.send_activation_code(user.phone, code):
-                raise ValueError("Échec de l'envoi du SMS")
+                raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(
                 f"Code de changement de mot de passe envoyé à {user.phone}")
@@ -656,7 +662,7 @@ class PasswordChangeService:
             return {
                 "success": True,
                 "message": "Un code de vérification a été envoyé par SMS.",
-                "token": str(token.token)
+                "token": str(token.token),
             }
 
         except ValueError:
@@ -667,7 +673,9 @@ class PasswordChangeService:
                 f"Erreur lors de la demande de changement: {str(e)}")
 
     @staticmethod
-    def confirm_password_change(token_uuid: str, code: str, new_password: str) -> Dict[str, Any]:
+    def confirm_password_change(
+        token_uuid: str, code: str, new_password: str
+    ) -> Dict[str, Any]:
         """
         Confirme le changement de mot de passe.
 
@@ -688,20 +696,18 @@ class PasswordChangeService:
             # Récupérer le token
             try:
                 token = VerificationToken.objects.get(
-                    token=token_uuid,
-                    verification_type='password_change',
-                    is_used=False
+                    token=token_uuid, verification_type="password_change", is_used=False
                 )
             except VerificationToken.DoesNotExist:
                 raise ValueError("Token de changement invalide ou expiré")
 
             # Vérifier le code
             if not token.verify_code(code):
-                raise ValueError("Code de vérification incorrect ou expiré")
+                raise ValueError(CODE_VERIFICATION_ERROR)
 
             # Vérifier que l'utilisateur existe
             if not token.user:
-                raise ValueError("Utilisateur associé au token introuvable")
+                raise ValueError(USER_TOKEN_NOT_FOUND_ERROR)
 
             # Changer le mot de passe
             token.user.set_password(new_password)
@@ -714,7 +720,7 @@ class PasswordChangeService:
 
             return {
                 "success": True,
-                "message": "Votre mot de passe a été changé avec succès."
+                "message": "Votre mot de passe a été changé avec succès.",
             }
 
         except ValueError:
@@ -751,6 +757,7 @@ class ProfileService:
         try:
             # Valider les données avec le serializer
             from .serializers import ProfileUpdateSerializer
+
             serializer = ProfileUpdateSerializer(
                 user, data=profile_data, partial=True)
 
@@ -765,7 +772,7 @@ class ProfileService:
             return {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
-                "user": UserSerializer(user).data
+                "user": UserSerializer(user).data,
             }
 
         except Exception as e:
@@ -804,10 +811,11 @@ class PhoneChangeService:
 
             # Créer un token de changement de numéro
             from .models import VerificationToken
+
             token = VerificationToken.create_token(
-                verification_type='phone_change',
+                verification_type="phone_change",
                 user=user,
-                phone=new_phone  # Stocker le nouveau numéro
+                phone=new_phone,  # Stocker le nouveau numéro
             )
 
             # Générer le code et l'envoyer
@@ -818,14 +826,14 @@ class PhoneChangeService:
             # Envoyer le SMS sur le nouveau numéro
             sms_gateway = get_sms_gateway()
             if not sms_gateway.send_activation_code(new_phone, code):
-                raise ValueError("Échec de l'envoi du SMS")
+                raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(f"Code de changement de numéro envoyé à {new_phone}")
 
             return {
                 "success": True,
                 "message": "Un code de vérification a été envoyé sur votre nouveau numéro.",
-                "token": str(token.token)
+                "token": str(token.token),
             }
 
         except ValueError:
@@ -857,25 +865,24 @@ class PhoneChangeService:
             # Récupérer le token
             try:
                 token = VerificationToken.objects.get(
-                    token=token_uuid,
-                    verification_type='phone_change',
-                    is_used=False
+                    token=token_uuid, verification_type="phone_change", is_used=False
                 )
             except VerificationToken.DoesNotExist:
                 raise ValueError("Token de changement invalide ou expiré")
 
             # Vérifier le code
             if not token.verify_code(code):
-                raise ValueError("Code de vérification incorrect ou expiré")
+                raise ValueError(CODE_VERIFICATION_ERROR)
 
             # Vérifier que l'utilisateur existe
             if not token.user:
-                raise ValueError("Utilisateur associé au token introuvable")
+                raise ValueError(USER_TOKEN_NOT_FOUND_ERROR)
 
             # Vérifier que le nouveau numéro n'est pas déjà utilisé
             if User.objects.filter(phone=token.phone).exists():
                 raise ValueError(
-                    "Ce numéro de téléphone est maintenant utilisé par un autre compte")
+                    "Ce numéro de téléphone est maintenant utilisé par un autre compte"
+                )
 
             # Changer le numéro de téléphone
             old_phone = token.user.phone
@@ -886,17 +893,19 @@ class PhoneChangeService:
             token.mark_as_used()
 
             logger.info(
-                f"Numéro changé de {old_phone} vers {token.phone} pour l'utilisateur {token.user.id}")
+                f"Numéro changé de {old_phone} vers {token.phone} pour l'utilisateur {token.user.id}"
+            )
 
             return {
                 "success": True,
                 "message": "Votre numéro de téléphone a été changé avec succès.",
-                "new_phone": token.phone
+                "new_phone": token.phone,
             }
 
         except ValueError:
             raise
         except Exception as e:
             logger.error(
-                f"Erreur lors de la confirmation de changement de numéro: {str(e)}")
+                f"Erreur lors de la confirmation de changement de numéro: {str(e)}"
+            )
             raise ValueError(f"Erreur lors du changement de numéro: {str(e)}")

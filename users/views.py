@@ -55,6 +55,13 @@ from .serializers import (
 )
 from .services import AuthService, ActivationService, ResponseService
 
+# Constantes pour les messages d'erreur
+INTERNAL_SERVER_ERROR_MESSAGE = "Erreur interne du serveur"
+INVALID_DATA_ERROR_MESSAGE = "Données invalides"
+INTERNAL_ERROR_MESSAGE = "Erreur interne"
+UNEXPECTED_ERROR_DETAIL = "Une erreur inattendue s'est produite"
+CONFIRMATION_ERROR_MESSAGE = "Erreur de confirmation"
+
 
 @extend_schema(
     summary="Inscription d'un nouvel utilisateur",
@@ -129,7 +136,7 @@ def register_view(request: Request) -> Response:
     except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne du serveur"),
+                message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -212,7 +219,7 @@ def login_view(request: Request) -> Response:
     except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne du serveur"),
+                message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -336,7 +343,7 @@ def activate_view(request: Request) -> Response:
     except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne du serveur"),
+                message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -387,7 +394,7 @@ def resend_code_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides", errors=serializer.errors
+                message=INVALID_DATA_ERROR_MESSAGE, errors=serializer.errors
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -414,7 +421,7 @@ def resend_code_view(request: Request) -> Response:
     except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne du serveur"),
+                message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -460,7 +467,7 @@ def token_refresh_view(request: Request) -> Response:
         if not serializer.is_valid():
             return Response(
                 ResponseService.error_response(
-                    message="Données invalides",
+                    message=INVALID_DATA_ERROR_MESSAGE,
                     errors=serializer.errors,
                 ),
                 status=status.HTTP_400_BAD_REQUEST,
@@ -530,7 +537,7 @@ def logout_view(request: Request) -> Response:
         if not serializer.is_valid():
             return Response(
                 ResponseService.error_response(
-                    message="Données invalides",
+                    message=INVALID_DATA_ERROR_MESSAGE,
                     errors=serializer.errors,
                 ),
                 status=status.HTTP_400_BAD_REQUEST,
@@ -556,6 +563,7 @@ def logout_view(request: Request) -> Response:
 # =============================================================================
 # NOUVELLES VUES POUR LES FONCTIONNALITÉS ÉTENDUES
 # =============================================================================
+
 
 @extend_schema(
     summary="Demande de réinitialisation de mot de passe",
@@ -597,7 +605,7 @@ def password_forgot_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -611,8 +619,7 @@ def password_forgot_view(request: Request) -> Response:
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={}  # Pas de données sensibles
+                message=result["message"], data={}  # Pas de données sensibles
             ),
             status=status.HTTP_200_OK,
         )
@@ -625,11 +632,11 @@ def password_forgot_view(request: Request) -> Response:
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -676,7 +683,7 @@ def password_reset_confirm_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -695,25 +702,23 @@ def password_reset_confirm_view(request: Request) -> Response:
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={}
-            ),
+                message=result["message"], data={}),
             status=status.HTTP_200_OK,
         )
 
     except ValueError as e:
         return Response(
             ResponseService.error_response(
-                message="Erreur de confirmation",
+                message=CONFIRMATION_ERROR_MESSAGE,
                 errors={"detail": str(e)},
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -760,14 +765,13 @@ def password_change_request_view(request: Request) -> Response:
         Response: Réponse JSON avec statut et message
     """
     serializer = PasswordChangeRequestSerializer(
-        data=request.data,
-        context={'request': request}
+        data=request.data, context={"request": request}
     )
 
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -783,8 +787,7 @@ def password_change_request_view(request: Request) -> Response:
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={}  # Pas de données sensibles
+                message=result["message"], data={}  # Pas de données sensibles
             ),
             status=status.HTTP_200_OK,
         )
@@ -797,11 +800,11 @@ def password_change_request_view(request: Request) -> Response:
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -848,7 +851,7 @@ def password_change_confirm_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -867,25 +870,23 @@ def password_change_confirm_view(request: Request) -> Response:
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={}
-            ),
+                message=result["message"], data={}),
             status=status.HTTP_200_OK,
         )
 
     except ValueError as e:
         return Response(
             ResponseService.error_response(
-                message="Erreur de confirmation",
+                message=CONFIRMATION_ERROR_MESSAGE,
                 errors={"detail": str(e)},
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -931,15 +932,12 @@ def profile_update_view(request: Request) -> Response:
         Response: Réponse JSON avec statut et données du profil
     """
     serializer = ProfileUpdateSerializer(
-        request.user,
-        data=request.data,
-        partial=True
-    )
+        request.user, data=request.data, partial=True)
 
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -949,14 +947,11 @@ def profile_update_view(request: Request) -> Response:
         from .services import ProfileService
 
         result = ProfileService.update_profile(
-            request.user,
-            serializer.validated_data
-        )
+            request.user, serializer.validated_data)
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data=result["user"]
+                message=result["message"], data=result["user"]
             ),
             status=status.HTTP_200_OK,
         )
@@ -969,11 +964,11 @@ def profile_update_view(request: Request) -> Response:
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -1024,7 +1019,7 @@ def phone_change_request_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -1035,13 +1030,11 @@ def phone_change_request_view(request: Request) -> Response:
 
         new_phone = serializer.validated_data["new_phone"]
         result = PhoneChangeService.request_phone_change(
-            request.user, new_phone
-        )
+            request.user, new_phone)
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={}  # Pas de données sensibles
+                message=result["message"], data={}  # Pas de données sensibles
             ),
             status=status.HTTP_200_OK,
         )
@@ -1054,11 +1047,11 @@ def phone_change_request_view(request: Request) -> Response:
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -1105,7 +1098,7 @@ def phone_change_confirm_view(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(
             ResponseService.error_response(
-                message="Données invalides",
+                message=INVALID_DATA_ERROR_MESSAGE,
                 errors=serializer.errors,
             ),
             status=status.HTTP_400_BAD_REQUEST,
@@ -1117,14 +1110,12 @@ def phone_change_confirm_view(request: Request) -> Response:
         token_uuid = serializer.validated_data["token"]
         code = serializer.validated_data["code"]
 
-        result = PhoneChangeService.confirm_phone_change(
-            token_uuid, code
-        )
+        result = PhoneChangeService.confirm_phone_change(token_uuid, code)
 
         return Response(
             ResponseService.success_response(
-                message=result["message"],
-                data={"new_phone": result["new_phone"]}
+                message=result["message"], data={
+                    "new_phone": result["new_phone"]}
             ),
             status=status.HTTP_200_OK,
         )
@@ -1132,16 +1123,16 @@ def phone_change_confirm_view(request: Request) -> Response:
     except ValueError as e:
         return Response(
             ResponseService.error_response(
-                message="Erreur de confirmation",
+                message=CONFIRMATION_ERROR_MESSAGE,
                 errors={"detail": str(e)},
             ),
             status=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception as e:
+    except Exception:
         return Response(
             ResponseService.error_response(
-                message="Erreur interne",
-                errors={"detail": "Une erreur inattendue s'est produite"},
+                message=INTERNAL_ERROR_MESSAGE,
+                errors={"detail": UNEXPECTED_ERROR_DETAIL},
             ),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

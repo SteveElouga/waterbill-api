@@ -5,7 +5,6 @@ Ce module teste les fonctionnalités de réinitialisation de mot de passe
 via SMS avec le nouveau modèle VerificationToken.
 """
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -29,31 +28,31 @@ class PasswordResetTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="oldpassword123"
+            password="oldpassword123",
         )
         self.user.is_active = True
         self.user.save()
 
         # Données de test
-        self.forgot_data = {
-            "phone": "+237670000000"
-        }
+        self.forgot_data = {"phone": "+237670000000"}
 
         self.reset_data = {
             "token": "",
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
     def test_password_forgot_success(self):
         """Test de demande de réinitialisation réussie."""
         url = reverse("users:password_forgot")
 
-        with patch('users.services.PasswordResetService.request_password_reset') as mock_service:
+        with patch(
+            "users.services.PasswordResetService.request_password_reset"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Un code de réinitialisation a été envoyé par SMS."
+                "message": "Un code de réinitialisation a été envoyé par SMS.",
             }
 
             response = self.client.post(url, self.forgot_data, format="json")
@@ -70,10 +69,12 @@ class PasswordResetTestCase(MockedAPITestCase):
         # Utiliser un numéro qui n'existe pas
         data = {"phone": "+237999999999"}
 
-        with patch('users.services.PasswordResetService.request_password_reset') as mock_service:
+        with patch(
+            "users.services.PasswordResetService.request_password_reset"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Si ce numéro est associé à un compte, vous recevrez un SMS."
+                "message": "Si ce numéro est associé à un compte, vous recevrez un SMS.",
             }
 
             response = self.client.post(url, data, format="json")
@@ -110,18 +111,19 @@ class PasswordResetTestCase(MockedAPITestCase):
         """Test de confirmation de réinitialisation réussie."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_reset',
-            user=self.user
+            verification_type="password_reset", user=self.user
         )
 
         url = reverse("users:password_reset_confirm")
 
         self.reset_data["token"] = str(token.token)
 
-        with patch('users.services.PasswordResetService.confirm_password_reset') as mock_service:
+        with patch(
+            "users.services.PasswordResetService.confirm_password_reset"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Votre mot de passe a été réinitialisé avec succès."
+                "message": "Votre mot de passe a été réinitialisé avec succès.",
             }
 
             response = self.client.post(url, self.reset_data, format="json")
@@ -140,9 +142,12 @@ class PasswordResetTestCase(MockedAPITestCase):
 
         self.reset_data["token"] = "00000000-0000-0000-0000-000000000000"
 
-        with patch('users.services.PasswordResetService.confirm_password_reset') as mock_service:
+        with patch(
+            "users.services.PasswordResetService.confirm_password_reset"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Token de réinitialisation invalide ou expiré")
+                "Token de réinitialisation invalide ou expiré"
+            )
 
             response = self.client.post(url, self.reset_data, format="json")
 
@@ -154,8 +159,7 @@ class PasswordResetTestCase(MockedAPITestCase):
         """Test de confirmation avec code invalide."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_reset',
-            user=self.user
+            verification_type="password_reset", user=self.user
         )
 
         url = reverse("users:password_reset_confirm")
@@ -163,9 +167,12 @@ class PasswordResetTestCase(MockedAPITestCase):
         self.reset_data["token"] = str(token.token)
         self.reset_data["code"] = "000000"  # Code incorrect
 
-        with patch('users.services.PasswordResetService.confirm_password_reset') as mock_service:
+        with patch(
+            "users.services.PasswordResetService.confirm_password_reset"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Code de vérification incorrect ou expiré")
+                "Code de vérification incorrect ou expiré"
+            )
 
             response = self.client.post(url, self.reset_data, format="json")
 
@@ -181,7 +188,7 @@ class PasswordResetTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "differentpassword123"
+            "new_password_confirm": "differentpassword123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -198,7 +205,7 @@ class PasswordResetTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "123456",
             "new_password": "123",  # Mot de passe trop court
-            "new_password_confirm": "123"
+            "new_password_confirm": "123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -228,7 +235,7 @@ class PasswordResetTestCase(MockedAPITestCase):
             "token": "00000000-0000-0000-0000-000000000000",
             "code": "12345",  # Code trop court
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -245,7 +252,7 @@ class PasswordResetTestCase(MockedAPITestCase):
             "token": "invalid-uuid",
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         response = self.client.post(url, data, format="json")
@@ -267,7 +274,7 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="oldpassword123"
+            password="oldpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -276,13 +283,12 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
         """Test de demande de réinitialisation pour utilisateur existant."""
         from users.services import PasswordResetService
 
-        with patch('users.services.get_sms_gateway') as mock_gateway:
+        with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
             mock_sms.send_activation_code.return_value = True
             mock_gateway.return_value = mock_sms
 
-            result = PasswordResetService.request_password_reset(
-                "+237670000000")
+            result = PasswordResetService.request_password_reset("+237670000000")
 
             self.assertTrue(result["success"])
             self.assertIn("réinitialisation", result["message"])
@@ -290,8 +296,7 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
 
             # Vérifier qu'un token a été créé
             token = VerificationToken.objects.get(
-                verification_type='password_reset',
-                user=self.user
+                verification_type="password_reset", user=self.user
             )
             self.assertIsNotNone(token)
             mock_sms.send_activation_code.assert_called_once()
@@ -315,12 +320,11 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_reset',
-            user=self.user
+            verification_type="password_reset", user=self.user
         )
 
         # Simuler un code correct en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=True):
+        with patch.object(VerificationToken, "verify_code", return_value=True):
             result = PasswordResetService.confirm_password_reset(
                 str(token.token), "123456", "newpassword123"
             )
@@ -353,12 +357,11 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='password_reset',
-            user=self.user
+            verification_type="password_reset", user=self.user
         )
 
         # Simuler un code incorrect en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=False):
+        with patch.object(VerificationToken, "verify_code", return_value=False):
             with self.assertRaises(ValueError) as context:
                 PasswordResetService.confirm_password_reset(
                     str(token.token), "000000", "newpassword123"

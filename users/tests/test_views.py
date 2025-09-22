@@ -32,8 +32,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
             "apartment_name": "A1",
         }
 
-        self.login_data = {"phone": "237658552295",
-                           "password": "testpassword123"}
+        self.login_data = {"phone": "237658552295", "password": "testpassword123"}
 
         self.existing_user = User.objects.create_user(
             phone="237658552295",  # Numéro différent pour éviter les conflits
@@ -77,8 +76,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(
-            self.mock_sms.sent_messages[0]["phone"], "+237658552294")
+        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+237658552294")
 
         # Note: Les tokens ne sont pas générés lors de l'inscription
         # Ils sont générés seulement lors de la connexion
@@ -206,8 +204,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         """Test de récupération du profil avec authentification."""
         # Obtenir un token d'authentification
         login_url = reverse("users:login")
-        login_response = self.client.post(
-            login_url, self.login_data, format="json")
+        login_response = self.client.post(login_url, self.login_data, format="json")
         access_token = login_response.json()["data"]["tokens"]["access"]
 
         # Accéder au profil avec le token
@@ -258,8 +255,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(
-            self.mock_sms.sent_messages[0]["phone"], "+2376700002")
+        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+2376700002")
 
         # Test avec numéro formaté pour la connexion
         login_url = reverse("users:login")
@@ -271,8 +267,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         response = self.client.post(login_url, login_data, format="json")
         # Accepter 200 (succès) ou 400 (erreur de connexion)
         self.assertIn(
-            response.status_code, [
-                status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
         )
 
     def test_apartment_name_validation(self) -> None:
@@ -301,8 +296,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Accepter 201 (succès) ou 400 (erreur SMS Twilio)
         self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
         )
 
         if response.status_code == status.HTTP_201_CREATED:
@@ -310,6 +304,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
             # L'endpoint d'inscription ne retourne que le téléphone,
             # donc on vérifie directement en base de données
             from users.models import User
+
             # Le numéro est normalisé lors de la création
             user = User.objects.get(phone="+237658552297")
             self.assertEqual(user.apartment_name, "A12")

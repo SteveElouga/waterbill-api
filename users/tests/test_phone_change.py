@@ -5,7 +5,6 @@ Ce module teste les fonctionnalités de changement de numéro de téléphone
 via SMS avec vérification sur le nouveau numéro.
 """
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -30,7 +29,7 @@ class PhoneChangeTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="testpassword123"
+            password="testpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -40,14 +39,9 @@ class PhoneChangeTestCase(MockedAPITestCase):
         self.access_token = str(refresh.access_token)
 
         # Données de test
-        self.request_data = {
-            "new_phone": "+237670000001"
-        }
+        self.request_data = {"new_phone": "+237670000001"}
 
-        self.confirm_data = {
-            "token": "",
-            "code": "123456"
-        }
+        self.confirm_data = {"token": "", "code": "123456"}
 
     def test_phone_change_request_success(self):
         """Test de demande de changement de numéro réussie."""
@@ -57,10 +51,12 @@ class PhoneChangeTestCase(MockedAPITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
-        with patch('users.services.PhoneChangeService.request_phone_change') as mock_service:
+        with patch(
+            "users.services.PhoneChangeService.request_phone_change"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
-                "message": "Un code de vérification a été envoyé sur votre nouveau numéro."
+                "message": "Un code de vérification a été envoyé sur votre nouveau numéro.",
             }
 
             response = self.client.post(url, self.request_data, format="json")
@@ -73,11 +69,11 @@ class PhoneChangeTestCase(MockedAPITestCase):
     def test_phone_change_request_duplicate_phone(self):
         """Test de demande avec numéro déjà utilisé."""
         # Créer un autre utilisateur avec le numéro cible
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             phone="+237670000001",
             first_name="Other",
             last_name="User",
-            password="testpassword123"
+            password="testpassword123",
         )
 
         url = reverse("users:phone_change_request")
@@ -86,9 +82,12 @@ class PhoneChangeTestCase(MockedAPITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
-        with patch('users.services.PhoneChangeService.request_phone_change') as mock_service:
+        with patch(
+            "users.services.PhoneChangeService.request_phone_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Ce numéro de téléphone est déjà utilisé")
+                "Ce numéro de téléphone est déjà utilisé"
+            )
 
             response = self.client.post(url, self.request_data, format="json")
 
@@ -139,20 +138,20 @@ class PhoneChangeTestCase(MockedAPITestCase):
         """Test de confirmation de changement de numéro réussie."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         url = reverse("users:phone_change_confirm")
 
         self.confirm_data["token"] = str(token.token)
 
-        with patch('users.services.PhoneChangeService.confirm_phone_change') as mock_service:
+        with patch(
+            "users.services.PhoneChangeService.confirm_phone_change"
+        ) as mock_service:
             mock_service.return_value = {
                 "success": True,
                 "message": "Votre numéro de téléphone a été changé avec succès.",
-                "new_phone": "+237670000001"
+                "new_phone": "+237670000001",
             }
 
             response = self.client.post(url, self.confirm_data, format="json")
@@ -173,9 +172,12 @@ class PhoneChangeTestCase(MockedAPITestCase):
 
         self.confirm_data["token"] = "00000000-0000-0000-0000-000000000000"
 
-        with patch('users.services.PhoneChangeService.confirm_phone_change') as mock_service:
+        with patch(
+            "users.services.PhoneChangeService.confirm_phone_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Token de changement invalide ou expiré")
+                "Token de changement invalide ou expiré"
+            )
 
             response = self.client.post(url, self.confirm_data, format="json")
 
@@ -187,9 +189,7 @@ class PhoneChangeTestCase(MockedAPITestCase):
         """Test de confirmation avec code invalide."""
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         url = reverse("users:phone_change_confirm")
@@ -197,9 +197,12 @@ class PhoneChangeTestCase(MockedAPITestCase):
         self.confirm_data["token"] = str(token.token)
         self.confirm_data["code"] = "000000"  # Code incorrect
 
-        with patch('users.services.PhoneChangeService.confirm_phone_change') as mock_service:
+        with patch(
+            "users.services.PhoneChangeService.confirm_phone_change"
+        ) as mock_service:
             mock_service.side_effect = ValueError(
-                "Code de vérification incorrect ou expiré")
+                "Code de vérification incorrect ou expiré"
+            )
 
             response = self.client.post(url, self.confirm_data, format="json")
 
@@ -227,7 +230,7 @@ class PhoneChangeTestCase(MockedAPITestCase):
 
         data = {
             "token": "00000000-0000-0000-0000-000000000000",
-            "code": "12345"  # Code trop court
+            "code": "12345",  # Code trop court
         }
 
         response = self.client.post(url, data, format="json")
@@ -240,10 +243,7 @@ class PhoneChangeTestCase(MockedAPITestCase):
         """Test de confirmation avec format de token invalide."""
         url = reverse("users:phone_change_confirm")
 
-        data = {
-            "token": "invalid-uuid",
-            "code": "123456"
-        }
+        data = {"token": "invalid-uuid", "code": "123456"}
 
         response = self.client.post(url, data, format="json")
 
@@ -264,7 +264,7 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
             phone="+237670000000",
             first_name="Test",
             last_name="User",
-            password="testpassword123"
+            password="testpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -273,14 +273,13 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
         """Test de demande de changement de numéro réussie."""
         from users.services import PhoneChangeService
 
-        with patch('users.services.get_sms_gateway') as mock_gateway:
+        with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
             mock_sms.send_activation_code.return_value = True
             mock_gateway.return_value = mock_sms
 
             result = PhoneChangeService.request_phone_change(
-                self.user, "+237670000001"
-            )
+                self.user, "+237670000001")
 
             self.assertTrue(result["success"])
             self.assertIn("nouveau numéro", result["message"])
@@ -288,8 +287,7 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
             # Vérifier qu'un token a été créé
             token = VerificationToken.objects.get(
-                verification_type='phone_change',
-                user=self.user
+                verification_type="phone_change", user=self.user
             )
             self.assertIsNotNone(token)
             self.assertEqual(token.phone, "+237670000001")
@@ -303,17 +301,15 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
         from users.services import PhoneChangeService
 
         # Créer un autre utilisateur avec le numéro cible
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             phone="+237670000001",
             first_name="Other",
             last_name="User",
-            password="testpassword123"
+            password="testpassword123",
         )
 
         with self.assertRaises(ValueError) as context:
-            PhoneChangeService.request_phone_change(
-                self.user, "+237670000001"
-            )
+            PhoneChangeService.request_phone_change(self.user, "+237670000001")
 
         self.assertIn("déjà utilisé", str(context.exception))
 
@@ -323,16 +319,13 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         # Simuler un code correct en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=True):
+        with patch.object(VerificationToken, "verify_code", return_value=True):
             result = PhoneChangeService.confirm_phone_change(
-                str(token.token), "123456"
-            )
+                str(token.token), "123456")
 
             self.assertTrue(result["success"])
             self.assertIn("changé", result["message"])
@@ -363,17 +356,14 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         # Simuler un code incorrect en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=False):
+        with patch.object(VerificationToken, "verify_code", return_value=False):
             with self.assertRaises(ValueError) as context:
                 PhoneChangeService.confirm_phone_change(
-                    str(token.token), "000000"
-                )
+                    str(token.token), "000000")
 
             self.assertIn("incorrect", str(context.exception))
 
@@ -383,25 +373,22 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         # Créer un autre utilisateur avec le numéro cible après la création du token
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             phone="+237670000001",
             first_name="Other",
             last_name="User",
-            password="testpassword123"
+            password="testpassword123",
         )
 
         # Simuler un code correct en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=True):
+        with patch.object(VerificationToken, "verify_code", return_value=True):
             with self.assertRaises(ValueError) as context:
                 PhoneChangeService.confirm_phone_change(
-                    str(token.token), "123456"
-                )
+                    str(token.token), "123456")
 
             self.assertIn("maintenant utilisé", str(context.exception))
 
@@ -411,16 +398,13 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
         # Créer un token de test
         token = VerificationToken.create_token(
-            verification_type='phone_change',
-            user=self.user,
-            phone="+237670000001"
+            verification_type="phone_change", user=self.user, phone="+237670000001"
         )
 
         # Simuler un token expiré en mockant la méthode verify_code
-        with patch.object(VerificationToken, 'verify_code', return_value=False):
+        with patch.object(VerificationToken, "verify_code", return_value=False):
             with self.assertRaises(ValueError) as context:
                 PhoneChangeService.confirm_phone_change(
-                    str(token.token), "123456"
-                )
+                    str(token.token), "123456")
 
             self.assertIn("incorrect", str(context.exception))

@@ -19,6 +19,11 @@ PHONE_LENGTH_ERROR = "Le numéro de téléphone doit contenir entre 9 et 15 chif
 PHONE_HELP_TEXT = "Numéro de téléphone (minimum 9 chiffres)"
 STATUS_HELP_TEXT = "Statut de la réponse"
 MESSAGE_HELP_TEXT = "Message de confirmation"
+PASSWORD_MISMATCH_ERROR = "Les mots de passe ne correspondent pas."
+CODE_SMS_HELP_TEXT = "Code SMS de 6 chiffres"
+CODE_INVALID_ERROR = "Le code doit contenir exactement 6 chiffres."
+SECURITY_DATA_HELP_TEXT = "Données additionnelles (toujours vides pour la sécurité)"
+ADDITIONAL_DATA_HELP_TEXT = "Données additionnelles"
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -187,7 +192,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if password != password_confirm:
             raise serializers.ValidationError(
-                {"password_confirm": "Les mots de passe ne correspondent pas."}
+                {"password_confirm": PASSWORD_MISMATCH_ERROR}
             )
 
         return attrs
@@ -584,14 +589,14 @@ class LogoutResponseSerializer(serializers.Serializer):
 # SERIALIZERS POUR LES NOUVELLES FONCTIONNALITÉS
 # =============================================================================
 
+
 class PasswordForgotSerializer(serializers.Serializer):
     """
     Serializer pour la demande de réinitialisation de mot de passe.
     """
 
     phone = serializers.CharField(
-        max_length=15,
-        help_text="Numéro de téléphone de l'utilisateur"
+        max_length=15, help_text="Numéro de téléphone de l'utilisateur"
     )
 
     def validate_phone(self, value):
@@ -609,17 +614,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de réinitialisation de mot de passe.
     """
 
-    token = serializers.UUIDField(
-        help_text="Token UUID de réinitialisation"
-    )
+    token = serializers.UUIDField(help_text="Token UUID de réinitialisation")
     code = serializers.CharField(
-        max_length=6,
-        min_length=6,
-        help_text="Code SMS de 6 chiffres"
+        max_length=6, min_length=6, help_text=CODE_SMS_HELP_TEXT
     )
     new_password = serializers.CharField(
-        min_length=8,
-        help_text="Nouveau mot de passe (minimum 8 caractères)"
+        min_length=8, help_text="Nouveau mot de passe (minimum 8 caractères)"
     )
     new_password_confirm = serializers.CharField(
         help_text="Confirmation du nouveau mot de passe"
@@ -628,27 +628,25 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def validate_code(self, value):
         """Valide le format du code SMS."""
         if not value.isdigit() or len(value) != 6:
-            raise serializers.ValidationError(
-                "Le code doit contenir exactement 6 chiffres.")
+            raise serializers.ValidationError(CODE_INVALID_ERROR)
         return value
 
     def validate(self, attrs):
         """Valide la cohérence des mots de passe."""
-        new_password = attrs.get('new_password')
-        new_password_confirm = attrs.get('new_password_confirm')
+        new_password = attrs.get("new_password")
+        new_password_confirm = attrs.get("new_password_confirm")
 
         if new_password != new_password_confirm:
-            raise serializers.ValidationError({
-                'new_password_confirm': 'Les mots de passe ne correspondent pas.'
-            })
+            raise serializers.ValidationError(
+                {"new_password_confirm": PASSWORD_MISMATCH_ERROR}
+            )
 
         # Valider le mot de passe avec les validators Django
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError({
-                'new_password': list(e.messages)
-            })
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)})
 
         return attrs
 
@@ -664,7 +662,7 @@ class PasswordChangeRequestSerializer(serializers.Serializer):
 
     def validate_current_password(self, value):
         """Valide le mot de passe actuel."""
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not user.check_password(value):
             raise serializers.ValidationError(
                 "Le mot de passe actuel est incorrect.")
@@ -677,16 +675,12 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
     """
 
     token = serializers.UUIDField(
-        help_text="Token UUID de changement de mot de passe"
-    )
+        help_text="Token UUID de changement de mot de passe")
     code = serializers.CharField(
-        max_length=6,
-        min_length=6,
-        help_text="Code SMS de 6 chiffres"
+        max_length=6, min_length=6, help_text=CODE_SMS_HELP_TEXT
     )
     new_password = serializers.CharField(
-        min_length=8,
-        help_text="Nouveau mot de passe (minimum 8 caractères)"
+        min_length=8, help_text="Nouveau mot de passe (minimum 8 caractères)"
     )
     new_password_confirm = serializers.CharField(
         help_text="Confirmation du nouveau mot de passe"
@@ -695,27 +689,25 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
     def validate_code(self, value):
         """Valide le format du code SMS."""
         if not value.isdigit() or len(value) != 6:
-            raise serializers.ValidationError(
-                "Le code doit contenir exactement 6 chiffres.")
+            raise serializers.ValidationError(CODE_INVALID_ERROR)
         return value
 
     def validate(self, attrs):
         """Valide la cohérence des mots de passe."""
-        new_password = attrs.get('new_password')
-        new_password_confirm = attrs.get('new_password_confirm')
+        new_password = attrs.get("new_password")
+        new_password_confirm = attrs.get("new_password_confirm")
 
         if new_password != new_password_confirm:
-            raise serializers.ValidationError({
-                'new_password_confirm': 'Les mots de passe ne correspondent pas.'
-            })
+            raise serializers.ValidationError(
+                {"new_password_confirm": PASSWORD_MISMATCH_ERROR}
+            )
 
         # Valider le mot de passe avec les validators Django
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError({
-                'new_password': list(e.messages)
-            })
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)})
 
         return attrs
 
@@ -727,17 +719,15 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            'first_name',
-            'last_name',
-            'email',
-            'address',
-            'apartment_name'
-        ]
+        fields = ["first_name", "last_name",
+                  "email", "address", "apartment_name"]
 
     def validate_email(self, value):
         """Valide l'email s'il est fourni."""
-        if value and User.objects.filter(email=value).exclude(id=self.instance.id).exists():
+        if (
+            value
+            and User.objects.filter(email=value).exclude(id=self.instance.id).exists()
+        ):
             raise serializers.ValidationError(
                 "Cette adresse email est déjà utilisée.")
         return value
@@ -746,7 +736,8 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         """Valide le nom de l'appartement."""
         if value and len(value) > 3:
             raise serializers.ValidationError(
-                "Le nom de l'appartement ne peut pas dépasser 3 caractères.")
+                "Le nom de l'appartement ne peut pas dépasser 3 caractères."
+            )
         return value
 
 
@@ -756,8 +747,7 @@ class PhoneChangeRequestSerializer(serializers.Serializer):
     """
 
     new_phone = serializers.CharField(
-        max_length=15,
-        help_text="Nouveau numéro de téléphone"
+        max_length=15, help_text="Nouveau numéro de téléphone"
     )
 
     def validate_new_phone(self, value):
@@ -766,12 +756,14 @@ class PhoneChangeRequestSerializer(serializers.Serializer):
             normalized_phone = normalize_phone(value)
             if not validate_phone_length(normalized_phone):
                 raise serializers.ValidationError(
-                    "Le numéro de téléphone doit contenir entre 9 et 15 chiffres.")
+                    "Le numéro de téléphone doit contenir entre 9 et 15 chiffres."
+                )
 
             # Vérifier que le numéro n'est pas déjà utilisé
             if User.objects.filter(phone=normalized_phone).exists():
                 raise serializers.ValidationError(
-                    "Ce numéro de téléphone est déjà utilisé.")
+                    "Ce numéro de téléphone est déjà utilisé."
+                )
 
             return normalized_phone
         except ValidationError as e:
@@ -784,25 +776,22 @@ class PhoneChangeConfirmSerializer(serializers.Serializer):
     """
 
     token = serializers.UUIDField(
-        help_text="Token UUID de changement de numéro"
-    )
+        help_text="Token UUID de changement de numéro")
     code = serializers.CharField(
-        max_length=6,
-        min_length=6,
-        help_text="Code SMS de 6 chiffres"
+        max_length=6, min_length=6, help_text=CODE_SMS_HELP_TEXT
     )
 
     def validate_code(self, value):
         """Valide le format du code SMS."""
         if not value.isdigit() or len(value) != 6:
-            raise serializers.ValidationError(
-                "Le code doit contenir exactement 6 chiffres.")
+            raise serializers.ValidationError(CODE_INVALID_ERROR)
         return value
 
 
 # =============================================================================
 # SERIALIZERS DE RÉPONSE
 # =============================================================================
+
 
 class PasswordForgotResponseSerializer(serializers.Serializer):
     """
@@ -813,7 +802,7 @@ class PasswordForgotResponseSerializer(serializers.Serializer):
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
         child=serializers.CharField(),
-        help_text="Données additionnelles (toujours vides pour la sécurité)"
+        help_text=SECURITY_DATA_HELP_TEXT,
     )
 
 
@@ -825,8 +814,7 @@ class PasswordResetConfirmResponseSerializer(serializers.Serializer):
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text="Données additionnelles"
+        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
     )
 
 
@@ -839,7 +827,7 @@ class PasswordChangeRequestResponseSerializer(serializers.Serializer):
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
         child=serializers.CharField(),
-        help_text="Données additionnelles (toujours vides pour la sécurité)"
+        help_text=SECURITY_DATA_HELP_TEXT,
     )
 
 
@@ -851,8 +839,7 @@ class PasswordChangeConfirmResponseSerializer(serializers.Serializer):
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text="Données additionnelles"
+        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
     )
 
 
@@ -864,8 +851,7 @@ class ProfileUpdateResponseSerializer(serializers.Serializer):
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text="Données du profil mis à jour"
+        child=serializers.CharField(), help_text="Données du profil mis à jour"
     )
 
 
@@ -878,7 +864,7 @@ class PhoneChangeRequestResponseSerializer(serializers.Serializer):
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
         child=serializers.CharField(),
-        help_text="Données additionnelles (toujours vides pour la sécurité)"
+        help_text=SECURITY_DATA_HELP_TEXT,
     )
 
 
@@ -890,6 +876,5 @@ class PhoneChangeConfirmResponseSerializer(serializers.Serializer):
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
     data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text="Données additionnelles"
+        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
     )

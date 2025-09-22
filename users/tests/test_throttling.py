@@ -8,11 +8,9 @@ et leur application aux endpoints d'authentification.
 from django.core.cache import cache
 from rest_framework import status
 from django.urls import reverse
-from django.test import TestCase
 from rest_framework.test import APIClient
 
 from .test_settings import MockedTestCase
-from .mocks import MockServices
 
 
 class ThrottlingTestCase(MockedTestCase):
@@ -110,23 +108,19 @@ class ThrottlingTestCase(MockedTestCase):
             if endpoint == register_url:
                 # Inscription
                 self.register_data["phone"] = f"67000000{i}"
-                response = self.client.post(
-                    endpoint, self.register_data, format="json")
+                response = self.client.post(endpoint, self.register_data, format="json")
             elif endpoint == login_url:
                 # Connexion
                 self.login_data["phone"] = f"67000000{i}"
-                response = self.client.post(
-                    endpoint, self.login_data, format="json")
+                response = self.client.post(endpoint, self.login_data, format="json")
             elif endpoint == refresh_url:
                 # Rafraîchissement de token
                 refresh_data = {"refresh": "invalid_token"}
-                response = self.client.post(
-                    endpoint, refresh_data, format="json")
+                response = self.client.post(endpoint, refresh_data, format="json")
             else:  # logout_url
                 # Déconnexion
                 logout_data = {"refresh": "invalid_token"}
-                response = self.client.post(
-                    endpoint, logout_data, format="json")
+                response = self.client.post(endpoint, logout_data, format="json")
 
             if i < 30:
                 # Les 30 premières devraient passer
@@ -154,8 +148,7 @@ class ThrottlingTestCase(MockedTestCase):
             response = self.client.post(url, self.register_data, format="json")
 
         # La dernière requête devrait être throttlée
-        self.assertEqual(response.status_code,
-                         status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
         # Simuler l'expiration du throttling en vidant le cache
         cache.clear()
@@ -164,8 +157,7 @@ class ThrottlingTestCase(MockedTestCase):
         self.register_data["phone"] = "670000011"
         response = self.client.post(url, self.register_data, format="json")
         self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
         )
 
     def test_throttling_response_format(self) -> None:
@@ -239,20 +231,19 @@ class ThrottlingTestCase(MockedTestCase):
             url, self.register_data, format="json", **ip2_headers
         )
         self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
         )
 
     def test_authenticated_user_no_throttling(self) -> None:
         """Test que les utilisateurs authentifiés ne sont pas throttlés."""
         # Créer un utilisateur
         register_url = reverse("users:register")
-        response = self.client.post(
-            register_url, self.register_data, format="json")
+        response = self.client.post(register_url, self.register_data, format="json")
 
         if response.status_code == status.HTTP_201_CREATED:
             # Activer l'utilisateur d'abord
             from users.models import User
+
             # Le numéro est normalisé lors de la création, donc on utilise le format international
             user = User.objects.get(phone="+670000000")
             user.is_active = True
@@ -262,19 +253,16 @@ class ThrottlingTestCase(MockedTestCase):
             login_url = reverse("users:login")
             login_data = {
                 "phone": "670000000",  # Utiliser le format original
-                "password": "testpassword123"
+                "password": "testpassword123",
             }
-            login_response = self.client.post(
-                login_url, login_data, format="json")
+            login_response = self.client.post(login_url, login_data, format="json")
 
             if login_response.status_code == status.HTTP_200_OK:
                 # Récupérer le token d'accès
-                access_token = login_response.json()[
-                    "data"]["tokens"]["access"]
+                access_token = login_response.json()["data"]["tokens"]["access"]
 
                 # Authentifier les requêtes suivantes
-                self.client.credentials(
-                    HTTP_AUTHORIZATION=f"Bearer {access_token}")
+                self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
 
                 # Faire plusieurs requêtes rapides - elles ne devraient pas être throttlées
                 profile_url = reverse("users:profile")
@@ -289,13 +277,11 @@ class ThrottlingTestCase(MockedTestCase):
 
         # Faire 31 requêtes (30 autorisées + 1 throttlée)
         for i in range(31):
-            response = self.client.post(
-                refresh_url, refresh_data, format="json")
+            response = self.client.post(refresh_url, refresh_data, format="json")
 
             if i < 30:
                 # Les 30 premières devraient passer (même avec token invalide)
-                self.assertEqual(response.status_code,
-                                 status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             else:
                 # La 31ème devrait être throttlée
                 self.assertEqual(
@@ -313,8 +299,7 @@ class ThrottlingTestCase(MockedTestCase):
 
             if i < 30:
                 # Les 30 premières devraient passer (même avec token invalide)
-                self.assertEqual(response.status_code,
-                                 status.HTTP_400_BAD_REQUEST)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             else:
                 # La 31ème devrait être throttlée
                 self.assertEqual(

@@ -5,7 +5,6 @@ Ce module teste les fonctionnalités de mise à jour du profil
 (nom, prénom, email, adresse, apartment_name).
 """
 
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -33,7 +32,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
             email="test@example.com",
             address="123 Test Street",
             apartment_name="A1",
-            password="testpassword123"
+            password="testpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -48,7 +47,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
             "last_name": "Name",
             "email": "updated@example.com",
             "address": "456 Updated Street",
-            "apartment_name": "B2"
+            "apartment_name": "B2",
         }
 
     def test_profile_update_success(self):
@@ -59,7 +58,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         self.client.credentials(
             HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
-        with patch('users.services.ProfileService.update_profile') as mock_service:
+        with patch("users.services.ProfileService.update_profile") as mock_service:
             mock_service.return_value = {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
@@ -70,8 +69,8 @@ class ProfileUpdateTestCase(MockedAPITestCase):
                     "last_name": "Name",
                     "email": "updated@example.com",
                     "address": "456 Updated Street",
-                    "apartment_name": "B2"
-                }
+                    "apartment_name": "B2",
+                },
             }
 
             response = self.client.put(url, self.update_data, format="json")
@@ -92,7 +91,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
         # Mettre à jour seulement le prénom
         partial_data = {"first_name": "NewFirst"}
 
-        with patch('users.services.ProfileService.update_profile') as mock_service:
+        with patch("users.services.ProfileService.update_profile") as mock_service:
             mock_service.return_value = {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
@@ -103,8 +102,8 @@ class ProfileUpdateTestCase(MockedAPITestCase):
                     "last_name": "User",
                     "email": "test@example.com",
                     "address": "123 Test Street",
-                    "apartment_name": "A1"
-                }
+                    "apartment_name": "A1",
+                },
             }
 
             response = self.client.put(url, partial_data, format="json")
@@ -139,12 +138,12 @@ class ProfileUpdateTestCase(MockedAPITestCase):
     def test_profile_update_duplicate_email(self):
         """Test de mise à jour avec email déjà utilisé."""
         # Créer un autre utilisateur avec un email
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             phone="+237670000001",
             first_name="Other",
             last_name="User",
             email="other@example.com",
-            password="testpassword123"
+            password="testpassword123",
         )
 
         url = reverse("users:profile_update")
@@ -187,7 +186,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
 
         data = {}
 
-        with patch('users.services.ProfileService.update_profile') as mock_service:
+        with patch("users.services.ProfileService.update_profile") as mock_service:
             mock_service.return_value = {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
@@ -198,8 +197,8 @@ class ProfileUpdateTestCase(MockedAPITestCase):
                     "last_name": "User",
                     "email": "test@example.com",
                     "address": "123 Test Street",
-                    "apartment_name": "A1"
-                }
+                    "apartment_name": "A1",
+                },
             }
 
             response = self.client.put(url, data, format="json")
@@ -218,7 +217,7 @@ class ProfileUpdateTestCase(MockedAPITestCase):
 
         data = {"phone": "+237999999999"}
 
-        with patch('users.services.ProfileService.update_profile') as mock_service:
+        with patch("users.services.ProfileService.update_profile") as mock_service:
             mock_service.return_value = {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
@@ -229,8 +228,8 @@ class ProfileUpdateTestCase(MockedAPITestCase):
                     "last_name": "User",
                     "email": "test@example.com",
                     "address": "123 Test Street",
-                    "apartment_name": "A1"
-                }
+                    "apartment_name": "A1",
+                },
             }
 
             response = self.client.put(url, data, format="json")
@@ -257,7 +256,7 @@ class ProfileServiceTestCase(MockedAPITestCase):
             email="test@example.com",
             address="123 Test Street",
             apartment_name="A1",
-            password="testpassword123"
+            password="testpassword123",
         )
         self.user.is_active = True
         self.user.save()
@@ -271,7 +270,7 @@ class ProfileServiceTestCase(MockedAPITestCase):
             "last_name": "Name",
             "email": "updated@example.com",
             "address": "456 Updated Street",
-            "apartment_name": "B2"
+            "apartment_name": "B2",
         }
 
         result = ProfileService.update_profile(self.user, profile_data)
@@ -292,9 +291,7 @@ class ProfileServiceTestCase(MockedAPITestCase):
         """Test de mise à jour partielle du profil."""
         from users.services import ProfileService
 
-        profile_data = {
-            "first_name": "NewFirst"
-        }
+        profile_data = {"first_name": "NewFirst"}
 
         result = ProfileService.update_profile(self.user, profile_data)
 
@@ -325,12 +322,12 @@ class ProfileServiceTestCase(MockedAPITestCase):
         from users.services import ProfileService
 
         # Créer un autre utilisateur avec un email
-        other_user = User.objects.create_user(
+        User.objects.create_user(
             phone="+237670000001",
             first_name="Other",
             last_name="User",
             email="other@example.com",
-            password="testpassword123"
+            password="testpassword123",
         )
 
         profile_data = {"email": "other@example.com"}
@@ -371,7 +368,7 @@ class ProfileServiceTestCase(MockedAPITestCase):
 
         profile_data = {
             "phone": "+237999999999",  # Ce champ ne devrait pas être traité
-            "first_name": "Updated"
+            "first_name": "Updated",
         }
 
         result = ProfileService.update_profile(self.user, profile_data)

@@ -17,6 +17,11 @@ from datetime import timedelta
 
 import environ
 
+# Constantes pour les limites de throttling
+TEST_THROTTLE_RATE = "1000/minute"
+TEST_THROTTLE_HOUR = "10000/hour"
+TEST_THROTTLE_SECOND = "1000/second"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -201,23 +206,23 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         # Limite élevée pour les tests
-        "anon": "10000/hour" if os.getenv("DJANGO_TEST_MODE") else "500/hour",
+        "anon": TEST_THROTTLE_HOUR if os.getenv("DJANGO_TEST_MODE") else "500/hour",
         # Limite élevée pour les tests
-        "user": "10000/hour" if os.getenv("DJANGO_TEST_MODE") else "2000/hour",
+        "user": TEST_THROTTLE_HOUR if os.getenv("DJANGO_TEST_MODE") else "2000/hour",
         # Limite élevée pour les tests
-        "login": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "15/minute",
+        "login": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "15/minute",
         # Limite élevée pour les tests
-        "register": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "10/minute",
+        "register": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/minute",
         # Limite élevée pour les tests
-        "auth": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "30/minute",
+        "auth": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "30/minute",
         # Limite élevée pour les tests
-        "burst": "1000/second" if os.getenv("DJANGO_TEST_MODE") else "50/second",
+        "burst": TEST_THROTTLE_SECOND if os.getenv("DJANGO_TEST_MODE") else "50/second",
         # Limite élevée pour les tests
-        "activate": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "20/minute",
+        "activate": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "20/minute",
         # Limite élevée pour les tests
-        "resend_code": "1000/minute" if os.getenv("DJANGO_TEST_MODE") else "5/minute",
+        "resend_code": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "5/minute",
         # Limite élevée pour les tests
-        "phone_based": "1000/hour" if os.getenv("DJANGO_TEST_MODE") else "10/hour",
+        "phone_based": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/hour",
     },
 }
 
@@ -341,42 +346,36 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     # Blacklist des anciens refresh tokens
     "BLACKLIST_AFTER_ROTATION": True,
-
     # === SÉCURITÉ ===
     # Mise à jour de la dernière connexion
     "UPDATE_LAST_LOGIN": True,
-    "ALGORITHM": "HS256",                           # Algorithme de signature sécurisé
+    "ALGORITHM": "HS256",  # Algorithme de signature sécurisé
     # Clé JWT séparée
     "SIGNING_KEY": env("JWT_SECRET_KEY", default=SECRET_KEY),
     # Pas de clé de vérification publique
     "VERIFYING_KEY": None,
-    "AUDIENCE": None,                               # Pas d'audience spécifique
-    "ISSUER": "waterbill-api",                      # Émetteur identifié
-    "JWK_URL": None,                               # Pas de JWK URL
-
+    "AUDIENCE": None,  # Pas d'audience spécifique
+    "ISSUER": "waterbill-api",  # Émetteur identifié
+    "JWK_URL": None,  # Pas de JWK URL
     # === TOLÉRANCE ET VALIDATION ===
-    "LEEWAY": 0,                                   # Pas de tolérance temporelle
+    "LEEWAY": 0,  # Pas de tolérance temporelle
     # Type d'en-tête d'autorisation
     "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",      # Nom de l'en-tête HTTP
-
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",  # Nom de l'en-tête HTTP
     # === IDENTIFICATION UTILISATEUR ===
-    "USER_ID_FIELD": "id",                         # Champ ID utilisateur
-    "USER_ID_CLAIM": "user_id",                    # Claim JWT pour l'ID utilisateur
+    "USER_ID_FIELD": "id",  # Champ ID utilisateur
+    "USER_ID_CLAIM": "user_id",  # Claim JWT pour l'ID utilisateur
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
-
     # === CLASSES DE TOKENS ===
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",              # Claim pour le type de token
+    "TOKEN_TYPE_CLAIM": "token_type",  # Claim pour le type de token
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
-    "JTI_CLAIM": "jti",                           # Claim JTI pour l'unicité
-
+    "JTI_CLAIM": "jti",  # Claim JTI pour l'unicité
     # === SERIALIZERS PERSONNALISÉS ===
     "TOKEN_OBTAIN_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
-
     # === CONFIGURATION AVANCÉE ===
     "TOKEN_OBTAIN_PAIR_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",

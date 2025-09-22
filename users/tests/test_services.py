@@ -71,8 +71,7 @@ class AuthServiceTestCase(MockedTestCase):
         """Test d'authentification avec mauvais mot de passe."""
         User.objects.create_user(**self.user_data)
 
-        authenticated_user = AuthService.authenticate_user(
-            "670000000", "wrongpassword")
+        authenticated_user = AuthService.authenticate_user("670000000", "wrongpassword")
 
         self.assertIsNone(authenticated_user)
 
@@ -104,8 +103,7 @@ class AuthServiceTestCase(MockedTestCase):
         user.is_active = True  # Activer l'utilisateur pour la connexion
         user.save()
 
-        logged_user, tokens = AuthService.login_user(
-            "670000000", "testpassword123")
+        logged_user, tokens = AuthService.login_user("670000000", "testpassword123")
 
         self.assertEqual(logged_user, user)
         self.assertIn("access", tokens)
