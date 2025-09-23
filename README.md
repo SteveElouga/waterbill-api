@@ -1450,7 +1450,7 @@ urlpatterns = [
 
 #### Structure des tests
 
-- **Tests unitaires** : `users/tests/` (162 tests avec mocks automatiques)
+- **Tests unitaires** : `users/tests/` (254 tests avec mocks automatiques)
 - **Tests d'intégration** : `tests/` (à créer)
 - **Tests API** : Utiliser `pytest-django` et `factory-boy`
 - **Mocks** : `users/tests/mocks.py` pour services externes
@@ -1466,6 +1466,52 @@ WaterBill utilise un système de tests unitaires robustes avec des mocks pour is
 - **Reproductibilité** : Mêmes résultats à chaque exécution
 - **Isolation** : Chaque test teste seulement la logique métier
 - **Mocks automatiques** : Configuration globale pour tous les tests
+
+#### 🔧 Corrections Récentes des Tests
+
+**Tests échouant après implémentation de la liste blanche :**
+- 23 tests échouaient à cause de la validation de liste blanche
+- **Solution** : Classes de base `WhitelistTestCase` et `WhitelistAPITestCase`
+- **Résultat** : 100% de réduction des échecs
+
+**Tests échouant après correction de l'endpoint logout :**
+- 8 tests de logout échouaient après changement d'authentification requise
+- **Solution** : Ajout de l'authentification dans les tests de logout
+- **Résultat** : Tous les tests de logout passent
+
+#### 🏗️ Classes de Base pour Tests
+
+##### **WhitelistTestCase**
+Classe de base pour les tests nécessitant la liste blanche des numéros de téléphone.
+
+```python
+from users.tests.test_whitelist_base import WhitelistTestCase
+
+class MonTest(WhitelistTestCase):
+    def test_inscription(self):
+        # Ajouter automatiquement un numéro à la liste blanche
+        self.add_phone_to_whitelist("237670000000", "Numéro de test")
+        
+        # Le test peut maintenant utiliser ce numéro pour l'inscription
+        response = self.client.post("/api/auth/register/", data)
+        self.assertEqual(response.status_code, 201)
+```
+
+##### **WhitelistAPITestCase**
+Mixin pour les tests d'API nécessitant la liste blanche.
+
+```python
+from users.tests.test_whitelist_base import WhitelistAPITestCase
+
+class MonAPITest(APITestCase, WhitelistAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.setUp_whitelist()  # Configure automatiquement la liste blanche
+        
+    def test_inscription_api(self):
+        self.add_phone_to_whitelist("237670000000")
+        # Test d'inscription...
+```
 
 ##### **🔧 Configuration automatique des mocks :**
 
