@@ -1032,6 +1032,8 @@ PHONE_INVALID_ERROR = "Le numéro de téléphone est invalide."
 PHONE_LENGTH_ERROR = "Le numéro de téléphone doit contenir entre 9 et 15 chiffres."
 STATUS_HELP_TEXT = "Statut de la réponse"
 MESSAGE_HELP_TEXT = "Message de confirmation"
+TOKEN_UUID_INVALID_ERROR = "Token UUID invalide."
+TOKEN_REQUIRED_ERROR = "Le token est requis."
 ```
 
 ### **🔧 Commandes de test**

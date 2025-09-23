@@ -13,7 +13,8 @@ from drf_spectacular.utils import extend_schema
 @extend_schema(
     summary="Health check",
     description="Endpoint de test pour vérifier que l'API fonctionne",
-    responses={200: {"type": "object", "properties": {"message": {"type": "string"}}}},
+    responses={200: {"type": "object", "properties": {
+        "message": {"type": "string"}}}},
     tags=["Health"],
     auth=[],
 )

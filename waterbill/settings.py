@@ -217,7 +217,8 @@ REST_FRAMEWORK = {
         "login": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "15/minute",
         # Limite élevée pour les tests
         "register": (
-            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/minute"
+            TEST_THROTTLE_RATE if os.getenv(
+                "DJANGO_TEST_MODE") else "10/minute"
         ),
         # Limite élevée pour les tests
         "auth": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "30/minute",
@@ -225,7 +226,8 @@ REST_FRAMEWORK = {
         "burst": TEST_THROTTLE_SECOND if os.getenv("DJANGO_TEST_MODE") else "50/second",
         # Limite élevée pour les tests
         "activate": (
-            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "20/minute"
+            TEST_THROTTLE_RATE if os.getenv(
+                "DJANGO_TEST_MODE") else "20/minute"
         ),
         # Limite élevée pour les tests
         "resend_code": (

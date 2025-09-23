@@ -94,7 +94,7 @@ Transformer la gestion de la facturation d'eau en une expérience numérique flu
 
 | Composant            | Technologie                   | Version | Rôle                         |
 | -------------------- | ----------------------------- | ------- | ---------------------------- |
-| **Framework**        | Django                        | 5.0.8   | Framework web principal      |
+| **Framework**        | Django                        | 5.1.11  | Framework web principal      |
 | **API**              | Django REST Framework         | 3.15.2  | API REST                     |
 | **Authentification** | djangorestframework-simplejwt | 5.5.1   | JWT Tokens                   |
 | **Base de données**  | PostgreSQL                    | 16+     | Stockage persistant          |
@@ -1118,7 +1118,7 @@ pip install -r requirements-dev.txt
 - ✅ **Versions cohérentes** entre `requirements.txt` et `requirements-dev.txt`
 - ✅ **PostgreSQL v3** (`psycopg[binary]`) pour les performances
 - ✅ **Dernières versions** des packages de sécurité
-- ✅ **Compatibilité mypy** : `django-stubs==5.1.1` compatible avec `djangorestframework-stubs==3.15.2`
+- ✅ **Compatibilité mypy** : `django-stubs==5.2.0` compatible avec `djangorestframework-stubs==3.15.2`
 
 #### 🐳 Optimisations Docker
 
@@ -1866,7 +1866,7 @@ LOGGING = {
    ERROR: Cannot install django-stubs==5.0.0 and djangorestframework-stubs==3.15.2
    ```
 
-   **Solution** : Utiliser `django-stubs==5.1.1` (déjà corrigé dans requirements-dev.txt)
+   **Solution** : Utiliser `django-stubs==5.2.0` (déjà corrigé dans requirements-dev.txt)
 
 2. **Conflit de versions pip** :
    ```bash
@@ -2142,6 +2142,30 @@ Le système inclut une **protection automatique** contre les caractères invisib
 // Après (fonctionne automatiquement)
 {"token": "9320ee31-d452-42c8-92d4-70c6ee434fc0", "code": "123456"}
 ```
+
+#### 📚 Documentation API Swagger
+
+L'interface Swagger affiche correctement les permissions de sécurité :
+
+**Configuration DRF Spectacular :**
+```python
+SPECTACULAR_SETTINGS = {
+    "SECURITY": [],  # Pas de sécurité globale
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
+```
+
+**Endpoints avec permissions correctes :**
+- **Endpoints publics** : `auth=[]` - Aucune icône de cadenas
+- **Endpoints protégés** : `auth=["jwtAuth"]` - Icône de cadenas + section Authorization
 
 #### 🚨 Gestion des Erreurs
 
