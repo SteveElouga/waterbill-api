@@ -1623,6 +1623,264 @@ python manage.py test users.tests.test_password_change.PasswordChangeServiceTest
 
 ---
 
+## 📋 Liste Blanche des Numéros de Téléphone
+
+### **🎯 Vue d'ensemble**
+
+Système de contrôle d'accès strict qui limite la création de comptes aux numéros de téléphone autorisés par les administrateurs.
+
+### **🏗️ Architecture**
+
+#### **Modèle PhoneWhitelist**
+
+```python
+class PhoneWhitelist(models.Model):
+    """
+    Modèle pour gérer la liste blanche des numéros de téléphone autorisés.
+    
+    Seuls les numéros présents dans cette liste peuvent créer un compte utilisateur.
+    Géré exclusivement par les administrateurs.
+    """
+    
+    phone = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="Numéro de téléphone autorisé (format international)")
+    
+    added_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="whitelisted_phones",
+        help_text="Administrateur qui a ajouté ce numéro")
+    
+    added_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Date d'ajout du numéro")
+    
+    notes = models.TextField(
+        blank=True,
+        help_text="Notes optionnelles sur ce numéro")
+    
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Si False, ce numéro ne peut plus créer de compte")
+```
+
+#### **Méthodes utilitaires**
+
+```python
+# Vérifier si un numéro est autorisé
+PhoneWhitelist.is_phone_authorized("+237670000000")  # True/False
+
+# Ajouter un numéro à la liste blanche
+PhoneWhitelist.authorize_phone(
+    "+237670000000", 
+    admin_user, 
+    "Client VIP"
+)
+```
+
+### **🔐 Validation d'inscription**
+
+#### **Serializer mis à jour**
+
+```python
+def validate_phone(self, value: str) -> str:
+    """Validation avec vérification de la liste blanche."""
+    # ... validation normale ...
+    
+    # Vérifier si le numéro est dans la liste blanche
+    from .models import PhoneWhitelist
+    if not PhoneWhitelist.is_phone_authorized(international_phone):
+        raise serializers.ValidationError(
+            "Votre numéro de téléphone n'est pas autorisé à créer un compte sur cette plateforme. "
+            "Veuillez contacter le service client pour obtenir l'autorisation."
+        )
+    
+    return international_phone
+```
+
+### **🛠️ Interface d'administration**
+
+#### **PhoneWhitelistAdmin**
+
+```python
+@admin.register(PhoneWhitelist)
+class PhoneWhitelistAdmin(admin.ModelAdmin):
+    """
+    Interface d'administration pour la liste blanche des numéros de téléphone.
+    
+    Permet aux administrateurs de gérer les numéros autorisés à créer un compte.
+    """
+    
+    list_display = [
+        "phone",
+        "added_by_display",
+        "added_at", 
+        "is_active",
+        "notes_preview"
+    ]
+    
+    list_filter = ["is_active", "added_at", "added_by"]
+    
+    search_fields = ["phone", "notes", "added_by__phone", "added_by__first_name"]
+```
+
+**Fonctionnalités :**
+- **Gestion complète** : Ajout, modification, suppression
+- **Historique** : Qui a ajouté quel numéro et quand
+- **Recherche** : Par numéro, notes, ou administrateur
+- **Filtrage** : Par statut, date, administrateur
+- **Notes** : Informations contextuelles sur chaque numéro
+
+### **⚙️ Commandes de gestion**
+
+#### **whitelist_phone**
+
+```bash
+# Ajouter un numéro autorisé
+python manage.py whitelist_phone add +237670000000 "Client VIP"
+
+# Vérifier un numéro
+python manage.py whitelist_phone check +237670000000
+
+# Lister tous les numéros
+python manage.py whitelist_phone list
+
+# Supprimer un numéro
+python manage.py whitelist_phone remove +237670000000
+```
+
+#### **init_whitelist**
+
+```bash
+# Initialiser avec des numéros de test
+python manage.py init_whitelist
+
+# Forcer la réactivation des numéros existants
+python manage.py init_whitelist --force
+```
+
+### **🧪 Tests**
+
+#### **Tests de modèle**
+
+```python
+class PhoneWhitelistModelTestCase(TestCase):
+    def test_is_phone_authorized_active(self):
+        """Test de vérification d'un numéro autorisé et actif."""
+        PhoneWhitelist.objects.create(
+            phone="+237670000001",
+            added_by=self.admin_user,
+            is_active=True
+        )
+        
+        self.assertTrue(PhoneWhitelist.is_phone_authorized("+237670000001"))
+
+    def test_is_phone_authorized_inactive(self):
+        """Test de vérification d'un numéro autorisé mais inactif."""
+        PhoneWhitelist.objects.create(
+            phone="+237670000001",
+            added_by=self.admin_user,
+            is_active=False
+        )
+        
+        self.assertFalse(PhoneWhitelist.is_phone_authorized("+237670000001"))
+```
+
+#### **Tests d'API**
+
+```python
+class PhoneWhitelistAPITestCase(APITestCase):
+    def test_register_authorized_phone_success(self):
+        """Test d'inscription avec un numéro autorisé."""
+        # Ajouter le numéro à la liste blanche
+        PhoneWhitelist.objects.create(
+            phone="+237670000001",
+            added_by=self.admin_user,
+            is_active=True
+        )
+        
+        register_data = {
+            "phone": "237670000001",
+            "first_name": "John",
+            "last_name": "Doe",
+            "password": "testpassword123",
+            "password_confirm": "testpassword123",
+        }
+        
+        response = self.client.post("/api/auth/register/", register_data)
+        self.assertEqual(response.status_code, 201)
+
+    def test_register_unauthorized_phone_failure(self):
+        """Test d'inscription avec un numéro non autorisé."""
+        register_data = {
+            "phone": "237999999999",  # Non autorisé
+            "first_name": "John",
+            "last_name": "Doe",
+            "password": "testpassword123",
+            "password_confirm": "testpassword123",
+        }
+        
+        response = self.client.post("/api/auth/register/", register_data)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("pas autorisé", str(response.data["data"]["phone"]))
+```
+
+### **📊 Flux de validation**
+
+```mermaid
+graph TD
+    A[Inscription utilisateur] --> B[Validation format téléphone]
+    B --> C[Vérification unicité]
+    C --> D[Vérification liste blanche]
+    D --> E{Numéro autorisé?}
+    E -->|Oui| F[Création compte]
+    E -->|Non| G[Erreur: Contacter service client]
+    F --> H[Envoi SMS activation]
+    G --> I[Fin: Inscription refusée]
+```
+
+### **🔧 Configuration**
+
+#### **Migration**
+
+```bash
+# Créer la migration
+python manage.py makemigrations users
+
+# Appliquer la migration
+python manage.py migrate
+
+# Initialiser avec des numéros de test
+python manage.py init_whitelist
+```
+
+#### **Permissions**
+
+- **Lecture** : Tous les utilisateurs (pour validation)
+- **Écriture** : Administrateurs uniquement
+- **Suppression** : Administrateurs uniquement
+
+### **💡 Bonnes pratiques**
+
+1. **Sécurité** :
+   - Toujours utiliser des numéros au format international
+   - Ajouter des notes explicatives pour chaque numéro
+   - Désactiver plutôt que supprimer les numéros
+
+2. **Gestion** :
+   - Utiliser l'interface d'administration pour les opérations courantes
+   - Utiliser les commandes CLI pour les opérations en masse
+   - Maintenir un historique des modifications
+
+3. **Messages utilisateur** :
+   - Messages clairs sur les raisons du refus
+   - Redirection vers le service client
+   - Pas d'exposition des détails techniques
+
+---
+
 ## 🚀 Optimisations Docker
 
 ### **⚡ Builds Accélérés**

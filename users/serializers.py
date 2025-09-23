@@ -135,6 +135,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "Un utilisateur avec ce numéro de téléphone existe déjà."
             )
 
+        # Vérifier si le numéro est dans la liste blanche
+        from .models import PhoneWhitelist
+        if not PhoneWhitelist.is_phone_authorized(international_phone):
+            raise serializers.ValidationError(
+                "Votre numéro de téléphone n'est pas autorisé à créer un compte sur cette plateforme. "
+                "Veuillez contacter le service client pour obtenir l'autorisation."
+            )
+
         return international_phone
 
     def validate_password(self, value: str) -> str:

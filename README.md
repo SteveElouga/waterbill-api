@@ -2272,6 +2272,40 @@ SPECTACULAR_SETTINGS = {
        pass
    ```
 
+#### 📋 Liste Blanche des Numéros de Téléphone
+
+**Contrôle d'accès strict** : Seuls les numéros autorisés peuvent créer un compte.
+
+**Fonctionnalités :**
+
+- **Validation automatique** : Vérification lors de l'inscription
+- **Gestion administrateur** : Interface d'administration Django
+- **Commandes de gestion** : CLI pour ajouter/supprimer des numéros
+- **Messages explicites** : Redirection vers le service client
+
+**Utilisation :**
+
+```bash
+# Ajouter un numéro autorisé
+python manage.py whitelist_phone add +237670000000 "Client VIP"
+
+# Vérifier un numéro
+python manage.py whitelist_phone check +237670000000
+
+# Lister tous les numéros
+python manage.py whitelist_phone list
+
+# Supprimer un numéro
+python manage.py whitelist_phone remove +237670000000
+```
+
+**Interface d'administration :**
+
+- Accès : `/admin/users/phonewhitelist/`
+- Gestion complète : ajout, modification, suppression
+- Historique : qui a ajouté quel numéro et quand
+- Notes : informations contextuelles sur chaque numéro
+
 #### 🚨 Gestion des Erreurs
 
 - **Non-bloquant** : L'échec d'envoi de SMS de confirmation n'interrompt pas l'opération
