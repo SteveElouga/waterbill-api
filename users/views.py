@@ -563,14 +563,14 @@ def logout_view(request: Request) -> Response:
     summary="Demande de réinitialisation de mot de passe",
     description="""
     Demande une réinitialisation de mot de passe via SMS.
-    
+
     **Endpoint:** `POST /api/auth/password/forgot/`
-    
+
     **Comportement de sécurité :**
     - Retourne toujours un succès (même si l'utilisateur n'existe pas)
     - Envoie un SMS uniquement si l'utilisateur existe
     - Utilise un token UUID pour la sécurité
-    
+
     **Throttling :** `password_forgot` (5 req/min)
     """,
     request=PasswordForgotSerializer,
@@ -640,15 +640,15 @@ def password_forgot_view(request: Request) -> Response:
     summary="Confirmation de réinitialisation de mot de passe",
     description="""
     Confirme la réinitialisation de mot de passe avec le code SMS.
-    
+
     **Endpoint:** `POST /api/auth/password/reset/confirm/`
-    
+
     **Processus :**
     1. Vérification du token UUID
     2. Validation du code SMS (6 chiffres)
     3. Mise à jour du mot de passe
     4. Invalidation du token (one-shot)
-    
+
     **Throttling :** `password_reset_confirm` (3 req/min)
     """,
     request=PasswordResetConfirmSerializer,
@@ -721,18 +721,18 @@ def password_reset_confirm_view(request: Request) -> Response:
     summary="Demande de changement de mot de passe",
     description="""
     Demande un changement de mot de passe (utilisateur authentifié).
-    
+
     **Endpoint:** `POST /api/auth/password/change/request/`
-    
+
     **Prérequis :**
     - Utilisateur authentifié (JWT)
     - Mot de passe actuel correct
-    
+
     **Processus :**
     1. Vérification du mot de passe actuel
     2. Envoi d'un code SMS de vérification
     3. Génération d'un token UUID
-    
+
     **Throttling :** `password_change_request` (3 req/min)
     """,
     request=PasswordChangeRequestSerializer,
@@ -807,15 +807,15 @@ def password_change_request_view(request: Request) -> Response:
     summary="Confirmation de changement de mot de passe",
     description="""
     Confirme le changement de mot de passe avec le code SMS.
-    
+
     **Endpoint:** `POST /api/auth/password/change/confirm/`
-    
+
     **Processus :**
     1. Vérification du token UUID
     2. Validation du code SMS (6 chiffres)
     3. Mise à jour du mot de passe
     4. Invalidation du token (one-shot)
-    
+
     **Throttling :** `password_change_confirm` (3 req/min)
     """,
     request=PasswordChangeConfirmSerializer,
@@ -888,19 +888,19 @@ def password_change_confirm_view(request: Request) -> Response:
     summary="Mise à jour du profil utilisateur",
     description="""
     Met à jour les informations du profil utilisateur.
-    
+
     **Endpoint:** `PUT /api/auth/me/`
-    
+
     **Champs modifiables :**
     - first_name (prénom)
     - last_name (nom)
     - email (adresse email)
     - address (adresse physique)
     - apartment_name (nom de l'appartement, max 3 caractères)
-    
+
     **Prérequis :**
     - Utilisateur authentifié (JWT)
-    
+
     **Note :** Le numéro de téléphone ne peut pas être modifié via cet endpoint.
     """,
     request=ProfileUpdateSerializer,
@@ -968,18 +968,18 @@ def profile_update_view(request: Request) -> Response:
     summary="Demande de changement de numéro de téléphone",
     description="""
     Demande un changement de numéro de téléphone.
-    
+
     **Endpoint:** `POST /api/auth/phone/change/request/`
-    
+
     **Prérequis :**
     - Utilisateur authentifié (JWT)
     - Nouveau numéro non utilisé
-    
+
     **Processus :**
     1. Vérification que le nouveau numéro n'est pas déjà utilisé
     2. Envoi d'un code SMS sur le nouveau numéro
     3. Génération d'un token UUID
-    
+
     **Throttling :** `phone_change_request` (3 req/min)
     """,
     request=PhoneChangeRequestSerializer,
@@ -1050,15 +1050,15 @@ def phone_change_request_view(request: Request) -> Response:
     summary="Confirmation de changement de numéro de téléphone",
     description="""
     Confirme le changement de numéro de téléphone avec le code SMS.
-    
+
     **Endpoint:** `POST /api/auth/phone/change/confirm/`
-    
+
     **Processus :**
     1. Vérification du token UUID
     2. Validation du code SMS (6 chiffres)
     3. Mise à jour du numéro de téléphone
     4. Invalidation du token (one-shot)
-    
+
     **Throttling :** `phone_change_confirm` (3 req/min)
     """,
     request=PhoneChangeConfirmSerializer,

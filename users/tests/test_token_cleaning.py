@@ -92,7 +92,9 @@ class TestTokenCleaning:
 
     def test_clean_token_multiple_invisible_chars(self):
         """Test du nettoyage de plusieurs caractères invisibles."""
-        dirty_token = "\u2060\u200B 550e8400-e29b-41d4-a716-446655440000 \u200C\u200D\uFEFF"
+        dirty_token = (
+            "\u2060\u200B 550e8400-e29b-41d4-a716-446655440000 \u200C\u200D\uFEFF"
+        )
         cleaned = clean_token(dirty_token)
         assert cleaned == "550e8400-e29b-41d4-a716-446655440000"
 
@@ -174,7 +176,7 @@ class TestSerializerTokenCleaning:
             "token": dirty_token,
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         serializer = PasswordChangeConfirmSerializer(data=data)
@@ -195,7 +197,7 @@ class TestSerializerTokenCleaning:
             "token": dirty_token,
             "code": "123456",
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         serializer = PasswordResetConfirmSerializer(data=data)
@@ -212,10 +214,7 @@ class TestSerializerTokenCleaning:
 
         dirty_token = "9320ee31-d452-42c8-92d4-70c6ee434fc0⁠⁠"
 
-        data = {
-            "token": dirty_token,
-            "code": "123456"
-        }
+        data = {"token": dirty_token, "code": "123456"}
 
         serializer = PhoneChangeConfirmSerializer(data=data)
         assert serializer.is_valid()
@@ -232,10 +231,7 @@ class TestSerializerTokenCleaning:
         # Token invalide même après nettoyage
         invalid_token = "not-a-valid-uuid⁠⁠"
 
-        data = {
-            "token": invalid_token,
-            "code": "123456"
-        }
+        data = {"token": invalid_token, "code": "123456"}
 
         serializer = PhoneChangeConfirmSerializer(data=data)
         assert not serializer.is_valid()
@@ -245,10 +241,7 @@ class TestSerializerTokenCleaning:
         """Test que le serializer gère un token vide."""
         from users.serializers import PhoneChangeConfirmSerializer
 
-        data = {
-            "token": "",
-            "code": "123456"
-        }
+        data = {"token": "", "code": "123456"}
 
         serializer = PhoneChangeConfirmSerializer(data=data)
         assert not serializer.is_valid()
@@ -273,20 +266,12 @@ class TestTokenCleaningIntegration:
 
     def test_password_change_flow_with_dirty_token(self):
         """Test du flux complet de changement de mot de passe avec token sale."""
-        # 1. Demander un changement de mot de passe
-        request_url = reverse("users:password_change_request")
-        self.client.force_authenticate(user=self.user)
-
-        request_data = {
-            "current_password": "password123",
-            "new_phone": "+675799744"  # Simuler une demande
-        }
 
         # Créer un token de changement de mot de passe
         token = VerificationToken.create_token(
             verification_type="password_change",
             user=self.user,
-            phone=self.user.phone  # Ajouter le phone requis
+            phone=self.user.phone,  # Ajouter le phone requis
         )
         code = VerificationToken.generate_code()
         token.code_hash = VerificationToken.hash_code(code)
@@ -301,7 +286,7 @@ class TestTokenCleaningIntegration:
             "token": dirty_token,
             "code": code,
             "new_password": "newpassword123",
-            "new_password_confirm": "newpassword123"
+            "new_password_confirm": "newpassword123",
         }
 
         response = self.client.post(confirm_url, confirm_data, format="json")
@@ -314,9 +299,7 @@ class TestTokenCleaningIntegration:
         """Test du flux complet de changement de numéro avec token sale."""
         # Créer un token de changement de numéro
         token = VerificationToken.create_token(
-            verification_type="phone_change",
-            user=self.user,
-            phone="+675799744"
+            verification_type="phone_change", user=self.user, phone="+675799744"
         )
         code = VerificationToken.generate_code()
         token.code_hash = VerificationToken.hash_code(code)
@@ -327,10 +310,7 @@ class TestTokenCleaningIntegration:
 
         # Confirmer avec le token sale
         confirm_url = reverse("users:phone_change_confirm")
-        confirm_data = {
-            "token": dirty_token,
-            "code": code
-        }
+        confirm_data = {"token": dirty_token, "code": code}
 
         response = self.client.post(confirm_url, confirm_data, format="json")
 

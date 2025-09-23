@@ -225,8 +225,7 @@ class ResponseService:
         Returns:
             Dict[str, Any]: Réponse standardisée
         """
-        response = {"status": "success",
-                    "message": message, "data": data or {}}
+        response = {"status": "success", "message": message, "data": data or {}}
 
         return response
 
@@ -245,8 +244,7 @@ class ResponseService:
         Returns:
             Dict[str, Any]: Réponse d'erreur standardisée
         """
-        response = {"status": "error",
-                    "message": message, "data": errors or {}}
+        response = {"status": "error", "message": message, "data": errors or {}}
 
         return response
 
@@ -301,10 +299,8 @@ class ActivationService:
             return code
 
         except Exception as e:
-            logger.error(
-                f"Erreur lors de l'envoi du code d'activation: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de l'envoi du code d'activation: {str(e)}")
+            logger.error(f"Erreur lors de l'envoi du code d'activation: {str(e)}")
+            raise ValueError(f"Erreur lors de l'envoi du code d'activation: {str(e)}")
 
     @staticmethod
     def verify_activation_code(phone: str, code: str) -> User:
@@ -363,8 +359,7 @@ class ActivationService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la vérification du code: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de la vérification du code: {str(e)}")
+            raise ValueError(f"Erreur lors de la vérification du code: {str(e)}")
 
     @staticmethod
     def resend_activation_code(phone: str) -> None:
@@ -399,11 +394,9 @@ class ActivationService:
                 # Vérifier si un nouveau code peut être envoyé
                 if not token.can_send_new_code():
                     if token.is_locked:
-                        raise ValueError(
-                            "Compte verrouillé. Contactez le support.")
+                        raise ValueError("Compte verrouillé. Contactez le support.")
                     else:
-                        raise ValueError(
-                            "Attendez avant de demander un nouveau code.")
+                        raise ValueError("Attendez avant de demander un nouveau code.")
 
                 # Mettre à jour le token pour le renvoi
                 token.send_count += 1
@@ -513,8 +506,7 @@ class PasswordResetService:
             except User.DoesNotExist:
                 # Pour la sécurité, on retourne toujours un succès
                 # même si l'utilisateur n'existe pas
-                logger.info(
-                    f"Demande de reset pour numéro inexistant: {phone}")
+                logger.info(f"Demande de reset pour numéro inexistant: {phone}")
                 return {
                     "success": True,
                     "message": "Si ce numéro est associé à un compte, vous recevrez un SMS.",
@@ -535,10 +527,12 @@ class PasswordResetService:
             # Envoyer le SMS avec lien de redirection
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
-            redirect_url = generate_redirect_url(
-                str(token.token), "password_reset")
 
-            if not sms_gateway.send_verification_code(phone, code, "password_reset", redirect_url):
+            redirect_url = generate_redirect_url(str(token.token), "password_reset")
+
+            if not sms_gateway.send_verification_code(
+                phone, code, "password_reset", redirect_url
+            ):
                 raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(f"Code de réinitialisation envoyé à {phone}")
@@ -553,8 +547,7 @@ class PasswordResetService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la demande de reset: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de la demande de réinitialisation: {str(e)}")
+            raise ValueError(f"Erreur lors de la demande de réinitialisation: {str(e)}")
 
     @staticmethod
     def confirm_password_reset(
@@ -583,8 +576,7 @@ class PasswordResetService:
                     token=token_uuid, verification_type="password_reset", is_used=False
                 )
             except VerificationToken.DoesNotExist:
-                raise ValueError(
-                    "Token de réinitialisation invalide ou expiré")
+                raise ValueError("Token de réinitialisation invalide ou expiré")
 
             # Vérifier le code
             if not token.verify_code(code):
@@ -605,11 +597,13 @@ class PasswordResetService:
             sms_gateway = get_sms_gateway()
             try:
                 sms_gateway.send_confirmation_message(
-                    token.user.phone, "password_reset")
+                    token.user.phone, "password_reset"
+                )
             except Exception as e:
                 # Log l'erreur mais ne pas faire échouer l'opération
                 logger.warning(
-                    f"Échec envoi SMS de confirmation pour {token.user.phone}: {str(e)}")
+                    f"Échec envoi SMS de confirmation pour {token.user.phone}: {str(e)}"
+                )
 
             logger.info(f"Mot de passe réinitialisé pour {token.user.phone}")
 
@@ -665,14 +659,15 @@ class PasswordChangeService:
             # Envoyer le SMS avec lien de redirection
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
-            redirect_url = generate_redirect_url(
-                str(token.token), "password_change")
 
-            if not sms_gateway.send_verification_code(user.phone, code, "password_change", redirect_url):
+            redirect_url = generate_redirect_url(str(token.token), "password_change")
+
+            if not sms_gateway.send_verification_code(
+                user.phone, code, "password_change", redirect_url
+            ):
                 raise ValueError(SMS_SEND_FAILED_ERROR)
 
-            logger.info(
-                f"Code de changement de mot de passe envoyé à {user.phone}")
+            logger.info(f"Code de changement de mot de passe envoyé à {user.phone}")
 
             return {
                 "success": True,
@@ -684,8 +679,7 @@ class PasswordChangeService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la demande de changement: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de la demande de changement: {str(e)}")
+            raise ValueError(f"Erreur lors de la demande de changement: {str(e)}")
 
     @staticmethod
     def confirm_password_change(
@@ -735,11 +729,13 @@ class PasswordChangeService:
             sms_gateway = get_sms_gateway()
             try:
                 sms_gateway.send_confirmation_message(
-                    token.user.phone, "password_change")
+                    token.user.phone, "password_change"
+                )
             except Exception as e:
                 # Log l'erreur mais ne pas faire échouer l'opération
                 logger.warning(
-                    f"Échec envoi SMS de confirmation pour {token.user.phone}: {str(e)}")
+                    f"Échec envoi SMS de confirmation pour {token.user.phone}: {str(e)}"
+                )
 
             logger.info(f"Mot de passe changé pour {token.user.phone}")
 
@@ -751,8 +747,7 @@ class PasswordChangeService:
         except ValueError:
             raise
         except Exception as e:
-            logger.error(
-                f"Erreur lors de la confirmation de changement: {str(e)}")
+            logger.error(f"Erreur lors de la confirmation de changement: {str(e)}")
             raise ValueError(f"Erreur lors du changement: {str(e)}")
 
 
@@ -783,8 +778,7 @@ class ProfileService:
             # Valider les données avec le serializer
             from .serializers import ProfileUpdateSerializer
 
-            serializer = ProfileUpdateSerializer(
-                user, data=profile_data, partial=True)
+            serializer = ProfileUpdateSerializer(user, data=profile_data, partial=True)
 
             if not serializer.is_valid():
                 raise ValueError(f"Données invalides: {serializer.errors}")
@@ -802,8 +796,7 @@ class ProfileService:
 
         except Exception as e:
             logger.error(f"Erreur lors de la mise à jour du profil: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de la mise à jour du profil: {str(e)}")
+            raise ValueError(f"Erreur lors de la mise à jour du profil: {str(e)}")
 
 
 class PhoneChangeService:
@@ -852,10 +845,12 @@ class PhoneChangeService:
             # Envoyer le SMS sur le nouveau numéro avec lien de redirection
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
-            redirect_url = generate_redirect_url(
-                str(token.token), "phone_change")
 
-            if not sms_gateway.send_verification_code(new_phone, code, "phone_change", redirect_url):
+            redirect_url = generate_redirect_url(str(token.token), "phone_change")
+
+            if not sms_gateway.send_verification_code(
+                new_phone, code, "phone_change", redirect_url
+            ):
                 raise ValueError(SMS_SEND_FAILED_ERROR)
 
             logger.info(f"Code de changement de numéro envoyé à {new_phone}")
@@ -869,10 +864,8 @@ class PhoneChangeService:
         except ValueError:
             raise
         except Exception as e:
-            logger.error(
-                f"Erreur lors de la demande de changement de numéro: {str(e)}")
-            raise ValueError(
-                f"Erreur lors de la demande de changement: {str(e)}")
+            logger.error(f"Erreur lors de la demande de changement de numéro: {str(e)}")
+            raise ValueError(f"Erreur lors de la demande de changement: {str(e)}")
 
     @staticmethod
     def confirm_phone_change(token_uuid: str, code: str) -> Dict[str, Any]:
@@ -929,18 +922,19 @@ class PhoneChangeService:
                 sms_gateway.send_confirmation_message(
                     old_phone,
                     "phone_change",
-                    f"Votre nouveau numéro est: {token.phone}"
+                    f"Votre nouveau numéro est: {token.phone}",
                 )
                 # Confirmation sur le nouveau numéro
                 sms_gateway.send_confirmation_message(
                     token.phone,
                     "phone_change",
-                    "Ce numéro est maintenant associé à votre compte WaterBill"
+                    "Ce numéro est maintenant associé à votre compte WaterBill",
                 )
             except Exception as e:
                 # Log l'erreur mais ne pas faire échouer l'opération
                 logger.warning(
-                    f"Échec envoi SMS de confirmation pour changement de numéro: {str(e)}")
+                    f"Échec envoi SMS de confirmation pour changement de numéro: {str(e)}"
+                )
 
             logger.info(
                 f"Numéro changé de {old_phone} vers {token.phone} pour l'utilisateur {token.user.id}"

@@ -8,6 +8,7 @@ pour l'envoi de SMS d'activation.
 import logging
 import os
 from abc import ABC, abstractmethod
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,9 @@ class ISmsGateway(ABC):
         pass
 
     @abstractmethod
-    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+    def send_verification_code(
+        self, phone: str, code: str, operation_type: str, redirect_url: str = None
+    ) -> bool:
         """
         Envoie un code de vérification par SMS pour une opération spécifique.
 
@@ -57,7 +60,9 @@ class ISmsGateway(ABC):
         pass
 
     @abstractmethod
-    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+    def send_confirmation_message(
+        self, phone: str, operation_type: str, details: str = None
+    ) -> bool:
         """
         Envoie un SMS de confirmation après une opération réussie.
 
@@ -107,7 +112,9 @@ class DummySmsGateway(ISmsGateway):
         print(f"🔐 Code d'activation pour {phone}: {code}")
         return True
 
-    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+    def send_verification_code(
+        self, phone: str, code: str, operation_type: str, redirect_url: str = None
+    ) -> bool:
         """
         Simule l'envoi d'un SMS de vérification.
 
@@ -123,27 +130,29 @@ class DummySmsGateway(ISmsGateway):
         messages = {
             "password_reset": "réinitialisation de mot de passe",
             "password_change": "changement de mot de passe",
-            "phone_change": "changement de numéro de téléphone"
+            "phone_change": "changement de numéro de téléphone",
         }
 
         operation_name = messages.get(operation_type, operation_type)
 
         if redirect_url:
             logger.info(
-                f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}")
+                f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}"
+            )
             logger.info(f"🔗 Lien de redirection: {redirect_url}")
-            print(
-                f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
+            print(f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
             print(f"🔗 Lien: {redirect_url}")
         else:
             logger.info(
-                f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}")
-            print(
-                f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
+                f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}"
+            )
+            print(f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
 
         return True
 
-    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+    def send_confirmation_message(
+        self, phone: str, operation_type: str, details: str = None
+    ) -> bool:
         """
         Simule l'envoi d'un SMS de confirmation.
 
@@ -158,11 +167,10 @@ class DummySmsGateway(ISmsGateway):
         messages = {
             "password_reset": "Votre mot de passe a été réinitialisé avec succès.",
             "password_change": "Votre mot de passe a été changé avec succès.",
-            "phone_change": "Votre numéro de téléphone a été changé avec succès."
+            "phone_change": "Votre numéro de téléphone a été changé avec succès.",
         }
 
-        message = messages.get(
-            operation_type, f"Opération {operation_type} confirmée.")
+        message = messages.get(operation_type, f"Opération {operation_type} confirmée.")
 
         if details:
             message += f" {details}"
@@ -257,7 +265,9 @@ class TwilioSmsGateway(ISmsGateway):
             logger.error(f"Erreur envoi SMS Twilio pour {phone}: {str(e)}")
             raise
 
-    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+    def send_verification_code(
+        self, phone: str, code: str, operation_type: str, redirect_url: str = None
+    ) -> bool:
         """
         Envoie un code de vérification via Twilio.
 
@@ -277,7 +287,7 @@ class TwilioSmsGateway(ISmsGateway):
             messages = {
                 "password_reset": "réinitialisation de mot de passe",
                 "password_change": "changement de mot de passe",
-                "phone_change": "changement de numéro de téléphone"
+                "phone_change": "changement de numéro de téléphone",
             }
 
             operation_name = messages.get(operation_type, operation_type)
@@ -308,10 +318,13 @@ class TwilioSmsGateway(ISmsGateway):
 
         except Exception as e:
             logger.error(
-                f"Erreur envoi SMS de vérification Twilio pour {phone}: {str(e)}")
+                f"Erreur envoi SMS de vérification Twilio pour {phone}: {str(e)}"
+            )
             raise
 
-    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+    def send_confirmation_message(
+        self, phone: str, operation_type: str, details: str = None
+    ) -> bool:
         """
         Envoie un SMS de confirmation via Twilio.
 
@@ -330,17 +343,20 @@ class TwilioSmsGateway(ISmsGateway):
             messages = {
                 "password_reset": "Votre mot de passe a été réinitialisé avec succès.",
                 "password_change": "Votre mot de passe a été changé avec succès.",
-                "phone_change": "Votre numéro de téléphone a été changé avec succès."
+                "phone_change": "Votre numéro de téléphone a été changé avec succès.",
             }
 
             message = messages.get(
-                operation_type, f"Opération {operation_type} confirmée.")
+                operation_type, f"Opération {operation_type} confirmée."
+            )
 
             if details:
                 message += f" {details}"
 
             # Ajouter un message de sécurité
-            message += " Si vous n'avez pas effectué cette action, contactez le support."
+            message += (
+                " Si vous n'avez pas effectué cette action, contactez le support."
+            )
 
             message = self.client.messages.create(
                 body=message,
@@ -356,7 +372,8 @@ class TwilioSmsGateway(ISmsGateway):
 
         except Exception as e:
             logger.error(
-                f"Erreur envoi SMS de confirmation Twilio pour {phone}: {str(e)}")
+                f"Erreur envoi SMS de confirmation Twilio pour {phone}: {str(e)}"
+            )
             raise
 
     def is_available(self) -> bool:
@@ -374,7 +391,7 @@ class TwilioSmsGateway(ISmsGateway):
             return False
 
 
-def clean_token(token: str) -> str:
+def clean_token(token: Union[str, None]) -> Union[str, None]:
     """
     Nettoie un token UUID des caractères invisibles et espaces.
 
@@ -382,27 +399,27 @@ def clean_token(token: str) -> str:
         token: Token UUID potentiellement pollué
 
     Returns:
-        str: Token nettoyé et prêt à l'utilisation
+        str | None: Token nettoyé et prêt à l'utilisation
     """
     if not token:
         return token
 
     # Supprimer les caractères invisibles Unicode courants
     invisible_chars = [
-        '\u2060',  # WORD JOINER
-        '\u200B',  # ZERO WIDTH SPACE
-        '\u200C',  # ZERO WIDTH NON-JOINER
-        '\u200D',  # ZERO WIDTH JOINER
-        '\uFEFF',  # ZERO WIDTH NO-BREAK SPACE (BOM)
-        ' ',       # SPACE normal
-        '\t',      # TAB
-        '\n',      # NEWLINE
-        '\r',      # CARRIAGE RETURN
+        "\u2060",  # WORD JOINER
+        "\u200B",  # ZERO WIDTH SPACE
+        "\u200C",  # ZERO WIDTH NON-JOINER
+        "\u200D",  # ZERO WIDTH JOINER
+        "\uFEFF",  # ZERO WIDTH NO-BREAK SPACE (BOM)
+        " ",  # SPACE normal
+        "\t",  # TAB
+        "\n",  # NEWLINE
+        "\r",  # CARRIAGE RETURN
     ]
 
     cleaned_token = str(token)
     for char in invisible_chars:
-        cleaned_token = cleaned_token.replace(char, '')
+        cleaned_token = cleaned_token.replace(char, "")
 
     return cleaned_token
 
@@ -424,13 +441,14 @@ def generate_redirect_url(token: str, operation_type: str, base_url: str = None)
 
     if not base_url:
         from django.conf import settings
+
         # Utiliser l'URL de base depuis les settings ou une valeur par défaut
-        base_url = getattr(settings, 'FRONTEND_URL', 'https://waterbill.app')
+        base_url = getattr(settings, "FRONTEND_URL", "https://waterbill.app")
 
     endpoints = {
         "password_reset": "/reset-password",
         "password_change": "/change-password",
-        "phone_change": "/change-phone"
+        "phone_change": "/change-phone",
     }
 
     endpoint = endpoints.get(operation_type, "/verify")
