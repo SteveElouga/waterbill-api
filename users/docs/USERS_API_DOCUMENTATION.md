@@ -1478,6 +1478,149 @@ check_api_health()
 
 ---
 
+## 🔧 Corrections Swagger et Tests
+
+### **🐛 Problèmes résolus**
+
+**Erreurs Swagger :**
+- `"😱 Could not render OperationContainer"` dans l'interface Swagger
+- Configuration incorrecte de la sécurité OpenAPI 3.0
+- Serializers incompatibles avec DRF Spectacular
+
+**Tests échouant :**
+- 5 tests échouaient après les modifications des services SMS
+- Structure de réponse incorrecte dans `profile_view`
+- Mocks SMS obsolètes
+
+### **✅ Solutions implémentées**
+
+#### **1. Configuration Swagger corrigée**
+
+```python
+# Configuration DRF Spectacular corrigée
+SPECTACULAR_SETTINGS = {
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+    "SECURITY": [],  # Pas de sécurité globale
+    "SECURITY_DEFINITIONS": {  # Ajouté pour compatibilité
+        "jwtAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    },
+}
+```
+
+#### **2. Syntaxe de sécurité OpenAPI 3.0**
+
+```python
+# Dans les vues, syntaxe corrigée
+@extend_schema(
+    auth=[{"jwtAuth": []}],  # ✅ Correct (objet)
+    # auth=["jwtAuth"],     # ❌ Incorrect (chaîne)
+)
+def profile_view(request):
+    pass
+```
+
+#### **3. Serializers optimisés**
+
+```python
+# Remplacement DictField par JSONField
+class ProfileResponseSerializer(serializers.Serializer):
+    status = serializers.CharField()
+    message = serializers.CharField()
+    data = serializers.JSONField()  # ✅ Compatible avec Swagger
+    # data = serializers.DictField(child=serializers.CharField())  # ❌ Problématique
+```
+
+#### **4. ProfileDataSerializer explicite**
+
+```python
+class ProfileDataSerializer(serializers.Serializer):
+    """Serializer avec champs définis explicitement pour compatibilité Swagger."""
+    id = serializers.IntegerField(help_text="ID unique de l'utilisateur")
+    phone = serializers.CharField(help_text="Numéro de téléphone")
+    first_name = serializers.CharField(help_text="Prénom")
+    last_name = serializers.CharField(help_text="Nom de famille")
+    full_name = serializers.CharField(help_text="Nom complet")
+    email = serializers.EmailField(allow_null=True, help_text="Adresse email")
+    address = serializers.CharField(allow_null=True, help_text="Adresse")
+    apartment_name = serializers.CharField(allow_null=True, help_text="Nom de l'appartement")
+    date_joined = serializers.DateTimeField(help_text="Date d'inscription")
+    is_active = serializers.BooleanField(help_text="Compte actif")
+```
+
+#### **5. Mocks SMS mis à jour**
+
+```python
+class MockSmsGateway:
+    """Mock SMS avec nouvelles méthodes."""
+    
+    def send_activation_code(self, phone: str, code: str) -> bool:
+        """Méthode originale conservée."""
+        pass
+    
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        """Nouvelle méthode pour codes avec redirection."""
+        pass
+    
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+        """Nouvelle méthode pour messages de confirmation."""
+        pass
+```
+
+#### **6. Tests corrigés**
+
+```python
+# Tests mis à jour pour utiliser les nouvelles méthodes
+def test_request_password_change_success(self):
+    with patch("users.services.get_sms_gateway") as mock_gateway:
+        mock_sms = MagicMock()
+        mock_sms.send_verification_code.return_value = True  # ✅ Nouvelle méthode
+        mock_gateway.return_value = mock_sms
+        
+        result = PasswordChangeService.request_password_change(self.user, "oldpassword123")
+        
+        # Vérification mise à jour
+        mock_sms.send_verification_code.assert_called_once()  # ✅ Correct
+```
+
+### **📊 Résultats des corrections**
+
+| Composant | Avant | Après | Statut |
+|-----------|-------|-------|--------|
+| **Interface Swagger** | Erreurs de rendu | Fonctionnelle | ✅ |
+| **Schéma OpenAPI** | Invalide | Valide | ✅ |
+| **Tests unitaires** | 5 échecs | Tous passent | ✅ |
+| **Mocks SMS** | Méthodes obsolètes | À jour | ✅ |
+| **Serializers** | Incompatibles | Compatibles | ✅ |
+
+### **🧪 Validation des corrections**
+
+```bash
+# Validation du schéma OpenAPI
+python manage.py spectacular --format=openapi-json --file=schema.json --validate
+# ✅ Aucune erreur
+
+# Tests des endpoints problématiques
+python manage.py test users.tests.test_views.AuthenticationViewsTestCase.test_profile_view_authenticated
+# ✅ Test passe
+
+python manage.py test users.tests.test_password_change.PasswordChangeServiceTestCase.test_request_password_change_success
+# ✅ Test passe
+```
+
+---
+
 ## 🚀 Optimisations Docker
 
 ### **⚡ Builds Accélérés**

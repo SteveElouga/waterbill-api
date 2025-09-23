@@ -2209,7 +2209,40 @@ SPECTACULAR_SETTINGS = {
 **Endpoints avec permissions correctes :**
 
 - **Endpoints publics** : `auth=[]` - Aucune icône de cadenas
-- **Endpoints protégés** : `auth=["jwtAuth"]` - Icône de cadenas + section Authorization
+- **Endpoints protégés** : `auth=[{"jwtAuth": []}]` - Icône de cadenas + section Authorization
+
+#### 🔧 Corrections Swagger Appliquées
+
+**Problèmes résolus :**
+
+- Erreur "😱 Could not render OperationContainer" dans l'interface Swagger
+- Configuration incorrecte de la sécurité OpenAPI 3.0
+- Serializers incompatibles avec DRF Spectacular
+
+**Solutions implémentées :**
+
+1. **Configuration de sécurité corrigée :**
+
+   ```python
+   # Syntaxe OpenAPI 3.0 correcte
+   auth=[{"jwtAuth": []}]  # Au lieu de auth=["jwtAuth"]
+   ```
+
+2. **Serializers optimisés :**
+
+   ```python
+   # Remplacement DictField par JSONField pour meilleure compatibilité
+   data = serializers.JSONField()  # Au lieu de DictField(child=CharField())
+   ```
+
+3. **Structure de données cohérente :**
+   ```python
+   # ProfileDataSerializer avec champs explicites
+   class ProfileDataSerializer(serializers.Serializer):
+       id = serializers.IntegerField()
+       phone = serializers.CharField()
+       # ... autres champs définis explicitement
+   ```
 
 #### 🚨 Gestion des Erreurs
 

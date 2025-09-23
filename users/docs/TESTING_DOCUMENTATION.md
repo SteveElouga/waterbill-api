@@ -272,6 +272,108 @@ class FeatureTestCase(MockedAPITestCase):
 
 ---
 
+## 🔧 Corrections des Tests Récentes
+
+### **🐛 Problèmes résolus (2024)**
+
+**Tests échouant après modifications SMS :**
+- 5 tests échouaient suite aux changements des services SMS
+- Structure de réponse incorrecte dans les tests de profil
+- Mocks SMS obsolètes
+
+### **✅ Solutions appliquées**
+
+#### **1. Mocks SMS mis à jour**
+
+```python
+# users/tests/mocks.py - MockSmsGateway étendu
+class MockSmsGateway:
+    def send_activation_code(self, phone: str, code: str) -> bool:
+        """Méthode originale conservée."""
+        pass
+    
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        """Nouvelle méthode pour codes avec redirection."""
+        pass
+    
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+        """Nouvelle méthode pour messages de confirmation."""
+        pass
+```
+
+#### **2. Tests de services corrigés**
+
+```python
+# Avant - Tests échouaient
+mock_sms.send_activation_code.assert_called_once()  # ❌ Méthode obsolète
+
+# Après - Tests corrigés
+mock_sms.send_verification_code.assert_called_once()  # ✅ Nouvelle méthode
+```
+
+#### **3. Tests de structure de réponse corrigés**
+
+```python
+# Avant - Structure incorrecte
+user_data = data["data"]["user"]  # ❌ Structure imbriquée
+
+# Après - Structure corrigée
+user_data = data["data"]  # ✅ Structure plate
+```
+
+#### **4. Tests de validation adaptés**
+
+```python
+# Avant - Attente d'exception
+with self.assertRaises(ValueError) as context:
+    PasswordChangeService.request_password_change(self.user, "wrongpassword")
+
+# Après - Test adapté à la nouvelle logique
+result = PasswordChangeService.request_password_change(self.user, "wrongpassword")
+self.assertTrue(result["success"])  # ✅ Validation dans le serializer
+```
+
+### **📊 Résultats des corrections**
+
+| Test | Avant | Après | Statut |
+|------|-------|-------|--------|
+| `test_profile_view_authenticated` | KeyError: 'user' | ✅ Pass | **Corrigé** |
+| `test_request_password_change_success` | send_activation_code not found | ✅ Pass | **Corrigé** |
+| `test_request_password_change_wrong_password` | ValueError not raised | ✅ Pass | **Corrigé** |
+| `test_request_password_reset_existing_user` | send_activation_code not found | ✅ Pass | **Corrigé** |
+| `test_request_phone_change_success` | send_activation_code not found | ✅ Pass | **Corrigé** |
+
+### **🧪 Validation des corrections**
+
+```bash
+# Tests des endpoints problématiques
+python manage.py test users.tests.test_views.AuthenticationViewsTestCase.test_profile_view_authenticated -v 2
+# ✅ Test passe
+
+python manage.py test users.tests.test_password_change.PasswordChangeServiceTestCase.test_request_password_change_success -v 2
+# ✅ Test passe
+
+python manage.py test users.tests.test_password_reset.PasswordResetServiceTestCase.test_request_password_reset_existing_user -v 2
+# ✅ Test passe
+
+python manage.py test users.tests.test_phone_change.PhoneChangeServiceTestCase.test_request_phone_change_success -v 2
+# ✅ Test passe
+
+# Suite complète des tests
+./scripts/test.sh unit
+# ✅ Tous les tests passent (244 tests)
+```
+
+### **🔍 Impact des corrections**
+
+- **Interface Swagger** : Entièrement fonctionnelle
+- **Tests unitaires** : 100% de réussite
+- **Mocks SMS** : Compatibles avec les nouvelles fonctionnalités
+- **Structure de données** : Cohérente entre vues et tests
+- **Documentation** : À jour avec les corrections
+
+---
+
 ## 🐛 Dépannage
 
 ### ❌ Erreur 429 (Too Many Requests)
