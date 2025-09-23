@@ -136,8 +136,7 @@ def register_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(
-                message=INTERNAL_SERVER_ERROR_MESSAGE),
+            ResponseService.error_response(message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -220,8 +219,7 @@ def login_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(
-                message=INTERNAL_SERVER_ERROR_MESSAGE),
+            ResponseService.error_response(message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -288,8 +286,7 @@ def profile_view(request: Request) -> Response:
     - Utilisateur déjà activé
     """,
     request=ActivateSerializer,
-    responses={200: ActivationResponseSerializer,
-               400: ErrorResponseSerializer},
+    responses={200: ActivationResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
     auth=[],
 )
@@ -346,8 +343,7 @@ def activate_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(
-                message=INTERNAL_SERVER_ERROR_MESSAGE),
+            ResponseService.error_response(message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -425,8 +421,7 @@ def resend_code_view(request: Request) -> Response:
         )
     except Exception:
         return Response(
-            ResponseService.error_response(
-                message=INTERNAL_SERVER_ERROR_MESSAGE),
+            ResponseService.error_response(message=INTERNAL_SERVER_ERROR_MESSAGE),
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -449,8 +444,7 @@ def resend_code_view(request: Request) -> Response:
     - Refresh token blacklisté
     """,
     request=TokenRefreshSerializer,
-    responses={200: TokenRefreshResponseSerializer,
-               400: ErrorResponseSerializer},
+    responses={200: TokenRefreshResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
     auth=[],
 )
@@ -710,8 +704,7 @@ def password_reset_confirm_view(request: Request) -> Response:
         )
 
         return Response(
-            ResponseService.success_response(
-                message=result["message"], data={}),
+            ResponseService.success_response(message=result["message"], data={}),
             status=status.HTTP_200_OK,
         )
 
@@ -880,8 +873,7 @@ def password_change_confirm_view(request: Request) -> Response:
         )
 
         return Response(
-            ResponseService.success_response(
-                message=result["message"], data={}),
+            ResponseService.success_response(message=result["message"], data={}),
             status=status.HTTP_200_OK,
         )
 
@@ -943,8 +935,7 @@ def profile_update_view(request: Request) -> Response:
     Returns:
         Response: Réponse JSON avec statut et données du profil
     """
-    serializer = ProfileUpdateSerializer(
-        request.user, data=request.data, partial=True)
+    serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
 
     if not serializer.is_valid():
         return Response(
@@ -958,8 +949,7 @@ def profile_update_view(request: Request) -> Response:
     try:
         from .services import ProfileService
 
-        result = ProfileService.update_profile(
-            request.user, serializer.validated_data)
+        result = ProfileService.update_profile(request.user, serializer.validated_data)
 
         return Response(
             ResponseService.success_response(
@@ -1042,8 +1032,7 @@ def phone_change_request_view(request: Request) -> Response:
         from .services import PhoneChangeService
 
         new_phone = serializer.validated_data["new_phone"]
-        result = PhoneChangeService.request_phone_change(
-            request.user, new_phone)
+        result = PhoneChangeService.request_phone_change(request.user, new_phone)
 
         return Response(
             ResponseService.success_response(
@@ -1128,8 +1117,7 @@ def phone_change_confirm_view(request: Request) -> Response:
 
         return Response(
             ResponseService.success_response(
-                message=result["message"], data={
-                    "new_phone": result["new_phone"]}
+                message=result["message"], data={"new_phone": result["new_phone"]}
             ),
             status=status.HTTP_200_OK,
         )

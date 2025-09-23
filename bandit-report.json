@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2025-09-23T15:33:01Z",
+  "generated_at": "2025-09-23T17:03:10Z",
   "metrics": {
     ".\\billing\\__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -167,7 +167,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 17,
+      "loc": 25,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -661,7 +661,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 922,
+      "loc": 936,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -700,7 +700,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 314,
+      "loc": 324,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -739,7 +739,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 7382,
+      "loc": 7414,
       "nosec": 0,
       "skipped_tests": 0
     }
