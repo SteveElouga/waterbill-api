@@ -236,7 +236,8 @@ class ResponseService:
         Returns:
             Dict[str, Any]: Réponse standardisée
         """
-        response = {"status": "success", "message": message, "data": data or {}}
+        response = {"status": "success",
+                    "message": message, "data": data or {}}
 
         return response
 
@@ -255,7 +256,8 @@ class ResponseService:
         Returns:
             Dict[str, Any]: Réponse d'erreur standardisée
         """
-        response = {"status": "error", "message": message, "data": errors or {}}
+        response = {"status": "error",
+                    "message": message, "data": errors or {}}
 
         return response
 
@@ -310,8 +312,10 @@ class ActivationService:
             return code
 
         except Exception as e:
-            logger.error(f"Erreur lors de l'envoi du code d'activation: {str(e)}")
-            raise ValueError(f"Erreur lors de l'envoi du code d'activation: {str(e)}")
+            logger.error(
+                f"Erreur lors de l'envoi du code d'activation: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de l'envoi du code d'activation: {str(e)}")
 
     @staticmethod
     def verify_activation_code(phone: str, code: str) -> User:
@@ -370,7 +374,8 @@ class ActivationService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la vérification du code: {str(e)}")
-            raise ValueError(f"Erreur lors de la vérification du code: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de la vérification du code: {str(e)}")
 
     @staticmethod
     def resend_activation_code(phone: str) -> None:
@@ -405,9 +410,11 @@ class ActivationService:
                 # Vérifier si un nouveau code peut être envoyé
                 if not token.can_send_new_code():
                     if token.is_locked:
-                        raise ValueError("Compte verrouillé. Contactez le support.")
+                        raise ValueError(
+                            "Compte verrouillé. Contactez le support.")
                     else:
-                        raise ValueError("Attendez avant de demander un nouveau code.")
+                        raise ValueError(
+                            "Attendez avant de demander un nouveau code.")
 
                 # Mettre à jour le token pour le renvoi
                 token.send_count += 1
@@ -517,7 +524,8 @@ class PasswordResetService:
             except User.DoesNotExist:
                 # Pour la sécurité, on retourne toujours un succès
                 # même si l'utilisateur n'existe pas
-                logger.info(f"Demande de reset pour numéro inexistant: {phone}")
+                logger.info(
+                    f"Demande de reset pour numéro inexistant: {phone}")
                 return {
                     "success": True,
                     "message": "Si ce numéro est associé à un compte, vous recevrez un SMS.",
@@ -539,7 +547,8 @@ class PasswordResetService:
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
 
-            redirect_url = generate_redirect_url(str(token.token), "password_reset")
+            redirect_url = generate_redirect_url(
+                str(token.token), "password_reset")
 
             if not sms_gateway.send_verification_code(
                 phone, code, "password_reset", redirect_url
@@ -558,7 +567,8 @@ class PasswordResetService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la demande de reset: {str(e)}")
-            raise ValueError(f"Erreur lors de la demande de réinitialisation: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de la demande de réinitialisation: {str(e)}")
 
     @staticmethod
     def confirm_password_reset(
@@ -587,7 +597,8 @@ class PasswordResetService:
                     token=token_uuid, verification_type="password_reset", is_used=False
                 )
             except VerificationToken.DoesNotExist:
-                raise ValueError("Token de réinitialisation invalide ou expiré")
+                raise ValueError(
+                    "Token de réinitialisation invalide ou expiré")
 
             # Vérifier le code
             if not token.verify_code(code):
@@ -671,14 +682,16 @@ class PasswordChangeService:
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
 
-            redirect_url = generate_redirect_url(str(token.token), "password_change")
+            redirect_url = generate_redirect_url(
+                str(token.token), "password_change")
 
             if not sms_gateway.send_verification_code(
                 user.phone, code, "password_change", redirect_url
             ):
                 raise ValueError(SMS_SEND_FAILED_ERROR)
 
-            logger.info(f"Code de changement de mot de passe envoyé à {user.phone}")
+            logger.info(
+                f"Code de changement de mot de passe envoyé à {user.phone}")
 
             return {
                 "success": True,
@@ -690,7 +703,8 @@ class PasswordChangeService:
             raise
         except Exception as e:
             logger.error(f"Erreur lors de la demande de changement: {str(e)}")
-            raise ValueError(f"Erreur lors de la demande de changement: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de la demande de changement: {str(e)}")
 
     @staticmethod
     def confirm_password_change(
@@ -758,7 +772,8 @@ class PasswordChangeService:
         except ValueError:
             raise
         except Exception as e:
-            logger.error(f"Erreur lors de la confirmation de changement: {str(e)}")
+            logger.error(
+                f"Erreur lors de la confirmation de changement: {str(e)}")
             raise ValueError(f"Erreur lors du changement: {str(e)}")
 
 
@@ -789,7 +804,8 @@ class ProfileService:
             # Valider les données avec le serializer
             from .serializers import ProfileUpdateSerializer
 
-            serializer = ProfileUpdateSerializer(user, data=profile_data, partial=True)
+            serializer = ProfileUpdateSerializer(
+                user, data=profile_data, partial=True)
 
             if not serializer.is_valid():
                 raise ValueError(f"Données invalides: {serializer.errors}")
@@ -812,7 +828,7 @@ class ProfileService:
                 "date_joined": user.date_joined,
                 "is_active": user.is_active,
             }
-            
+
             return {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
@@ -821,7 +837,8 @@ class ProfileService:
 
         except Exception as e:
             logger.error(f"Erreur lors de la mise à jour du profil: {str(e)}")
-            raise ValueError(f"Erreur lors de la mise à jour du profil: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de la mise à jour du profil: {str(e)}")
 
 
 class PhoneChangeService:
@@ -871,7 +888,8 @@ class PhoneChangeService:
             sms_gateway = get_sms_gateway()
             from .gateways.sms import generate_redirect_url
 
-            redirect_url = generate_redirect_url(str(token.token), "phone_change")
+            redirect_url = generate_redirect_url(
+                str(token.token), "phone_change")
 
             if not sms_gateway.send_verification_code(
                 new_phone, code, "phone_change", redirect_url
@@ -889,8 +907,10 @@ class PhoneChangeService:
         except ValueError:
             raise
         except Exception as e:
-            logger.error(f"Erreur lors de la demande de changement de numéro: {str(e)}")
-            raise ValueError(f"Erreur lors de la demande de changement: {str(e)}")
+            logger.error(
+                f"Erreur lors de la demande de changement de numéro: {str(e)}")
+            raise ValueError(
+                f"Erreur lors de la demande de changement: {str(e)}")
 
     @staticmethod
     def confirm_phone_change(token_uuid: str, code: str) -> Dict[str, Any]:

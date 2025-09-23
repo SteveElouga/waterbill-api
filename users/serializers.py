@@ -339,7 +339,8 @@ class ProfileDataSerializer(serializers.Serializer):
     full_name = serializers.CharField(help_text="Nom complet")
     email = serializers.EmailField(allow_null=True, help_text="Adresse email")
     address = serializers.CharField(allow_null=True, help_text="Adresse")
-    apartment_name = serializers.CharField(allow_null=True, help_text="Nom de l'appartement")
+    apartment_name = serializers.CharField(
+        allow_null=True, help_text="Nom de l'appartement")
     date_joined = serializers.DateTimeField(help_text="Date d'inscription")
     is_active = serializers.BooleanField(help_text="Compte actif")
 

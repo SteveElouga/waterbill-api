@@ -294,7 +294,9 @@
                     "Profil"
                 ],
                 "security": [
-                    "jwtAuth"
+                    {
+                        "jwtAuth": []
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -443,7 +445,9 @@
                     "required": true
                 },
                 "security": [
-                    "jwtAuth"
+                    {
+                        "jwtAuth": []
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -560,7 +564,9 @@
                     "required": true
                 },
                 "security": [
-                    "jwtAuth"
+                    {
+                        "jwtAuth": []
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -615,7 +621,9 @@
                     "required": true
                 },
                 "security": [
-                    "jwtAuth"
+                    {
+                        "jwtAuth": []
+                    }
                 ],
                 "responses": {
                     "200": {
