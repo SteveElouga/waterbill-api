@@ -264,6 +264,18 @@ SPECTACULAR_SETTINGS = {
     "PREPROCESSING_HOOKS": [],
     "SCHEMA_PATH_PREFIX": "/api/",
     "SCHEMA_PATH_PREFIX_TRIM": False,
+    # Correction pour respecter les permissions AllowAny
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "jwtAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+    # Ne pas ajouter automatiquement la sécurité JWT à tous les endpoints
+    "SECURITY": [],
 }
 
 # Logging Configuration

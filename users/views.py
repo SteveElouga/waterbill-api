@@ -90,6 +90,7 @@ CONFIRMATION_ERROR_MESSAGE = "Erreur de confirmation"
     request=RegisterSerializer,
     responses={201: RegisterResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -163,6 +164,7 @@ def register_view(request: Request) -> Response:
     request=LoginSerializer,
     responses={200: LoginResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -237,6 +239,7 @@ def login_view(request: Request) -> Response:
     """,
     responses={200: ProfileResponseSerializer, 401: ErrorResponseSerializer},
     tags=["Profil"],
+    auth=["jwtAuth"],
 )
 @api_view(["GET"])
 def profile_view(request: Request) -> Response:
@@ -285,6 +288,7 @@ def profile_view(request: Request) -> Response:
     request=ActivateSerializer,
     responses={200: ActivationResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -369,6 +373,7 @@ def activate_view(request: Request) -> Response:
     request=ResendCodeSerializer,
     responses={200: SimpleResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -441,6 +446,7 @@ def resend_code_view(request: Request) -> Response:
     request=TokenRefreshSerializer,
     responses={200: TokenRefreshResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -511,6 +517,7 @@ def token_refresh_view(request: Request) -> Response:
     request=LogoutSerializer,
     responses={200: LogoutResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -580,6 +587,7 @@ def logout_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -658,6 +666,7 @@ def password_forgot_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -743,6 +752,7 @@ def password_reset_confirm_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=["jwtAuth"],
 )
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -825,6 +835,7 @@ def password_change_request_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -910,6 +921,7 @@ def password_change_confirm_view(request: Request) -> Response:
         401: ErrorResponseSerializer,
     },
     tags=["Profil"],
+    auth=["jwtAuth"],
 )
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
@@ -990,6 +1002,7 @@ def profile_update_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=["jwtAuth"],
 )
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -1068,6 +1081,7 @@ def phone_change_request_view(request: Request) -> Response:
         429: ErrorResponseSerializer,
     },
     tags=["Authentification"],
+    auth=[],
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
