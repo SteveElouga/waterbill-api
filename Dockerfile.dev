@@ -30,7 +30,7 @@ COPY requirements-dev.txt /app/requirements-dev.txt
 
 # Installer les dépendances (requirements-dev.txt inclut déjà requirements.txt)
 RUN pip install --upgrade pip \
-    && pip install --no-deps -r requirements-dev.txt \
+    && pip install -r requirements-dev.txt \
     && pip check
 
 # Stage 2: Development - Image de développement

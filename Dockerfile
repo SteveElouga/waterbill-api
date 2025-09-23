@@ -25,7 +25,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copier et installer les dépendances Python (cache optimisé)
 COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip \
-    && pip install --no-deps -r requirements.txt \
+    && pip install -r requirements.txt \
     && pip check
 
 # Stage 2: Runtime - Image finale optimisée
