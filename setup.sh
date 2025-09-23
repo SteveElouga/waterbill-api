@@ -69,7 +69,7 @@ pip install -r requirements-dev.txt
 echo "🔍 Vérification finale des installations principales..."
 echo "  - Django: $(python -c 'import django; print(django.get_version())')"
 echo "  - DRF: $(python -c 'import rest_framework; print(rest_framework.VERSION)')"
-echo "  - PostgreSQL (psycopg): $(python -c 'import psycopg; print(\"✅ Installé\")')"
+echo "  - PostgreSQL (psycopg2): $(python -c 'import psycopg2; print(\"✅ Installé\")')"
 echo "  - Outils de développement:"
 echo "    - Black: $(python -c 'import black; print(black.__version__)' 2>/dev/null || echo '❌ Non installé')"
 echo "    - Ruff: $(python -c 'import ruff; print(ruff.__version__)' 2>/dev/null || echo '❌ Non installé')"

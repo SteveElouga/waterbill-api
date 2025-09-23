@@ -296,9 +296,10 @@ class TokenSerializer(serializers.Serializer):
 class AuthResponseSerializer(serializers.Serializer):
     """Serializer pour les réponses d'authentification."""
 
-    status = serializers.CharField(help_text="Statut de la réponse (success/error)")
+    status = serializers.CharField(
+        help_text="Statut de la réponse (success/error)")
     message = serializers.CharField(help_text="Message descriptif")
-    data = serializers.DictField(help_text="Données de la réponse")
+    data = serializers.JSONField(help_text="Données de la réponse")
 
 
 class AuthDataSerializer(serializers.Serializer):
@@ -331,7 +332,16 @@ class LoginResponseSerializer(serializers.Serializer):
 class ProfileDataSerializer(serializers.Serializer):
     """Serializer pour les données de profil."""
 
-    user = UserSerializer(help_text="Informations complètes du profil utilisateur")
+    id = serializers.IntegerField(help_text="ID unique de l'utilisateur")
+    phone = serializers.CharField(help_text="Numéro de téléphone")
+    first_name = serializers.CharField(help_text="Prénom")
+    last_name = serializers.CharField(help_text="Nom de famille")
+    full_name = serializers.CharField(help_text="Nom complet")
+    email = serializers.EmailField(allow_null=True, help_text="Adresse email")
+    address = serializers.CharField(allow_null=True, help_text="Adresse")
+    apartment_name = serializers.CharField(allow_null=True, help_text="Nom de l'appartement")
+    date_joined = serializers.DateTimeField(help_text="Date d'inscription")
+    is_active = serializers.BooleanField(help_text="Compte actif")
 
 
 class ProfileResponseSerializer(serializers.Serializer):
@@ -500,14 +510,16 @@ class TokenRefreshSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError("Le refresh token est obligatoire.")
+            raise serializers.ValidationError(
+                "Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
 
             RefreshToken(value)
         except Exception:
-            raise serializers.ValidationError("Refresh token invalide ou expiré.")
+            raise serializers.ValidationError(
+                "Refresh token invalide ou expiré.")
 
         return value
 
@@ -543,7 +555,8 @@ class LogoutSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError("Le refresh token est obligatoire.")
+            raise serializers.ValidationError(
+                "Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
@@ -661,7 +674,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError({"new_password": list(e.messages)})
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)})
 
         return attrs
 
@@ -679,7 +693,8 @@ class PasswordChangeRequestSerializer(serializers.Serializer):
         """Valide le mot de passe actuel."""
         user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError("Le mot de passe actuel est incorrect.")
+            raise serializers.ValidationError(
+                "Le mot de passe actuel est incorrect.")
         return value
 
 
@@ -688,7 +703,8 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de mot de passe.
     """
 
-    token = serializers.CharField(help_text="Token UUID de changement de mot de passe")
+    token = serializers.CharField(
+        help_text="Token UUID de changement de mot de passe")
 
     def validate_token(self, value):
         """Nettoie et valide le token UUID."""
@@ -738,7 +754,8 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError({"new_password": list(e.messages)})
+            raise serializers.ValidationError(
+                {"new_password": list(e.messages)})
 
         return attrs
 
@@ -750,7 +767,8 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "address", "apartment_name"]
+        fields = ["first_name", "last_name",
+                  "email", "address", "apartment_name"]
 
     def validate_email(self, value):
         """Valide l'email s'il est fourni."""
@@ -758,7 +776,8 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             value
             and User.objects.filter(email=value).exclude(id=self.instance.id).exists()
         ):
-            raise serializers.ValidationError("Cette adresse email est déjà utilisée.")
+            raise serializers.ValidationError(
+                "Cette adresse email est déjà utilisée.")
         return value
 
     def validate_apartment_name(self, value):
@@ -801,7 +820,8 @@ class PhoneChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de numéro de téléphone.
     """
 
-    token = serializers.CharField(help_text="Token UUID de changement de numéro")
+    token = serializers.CharField(
+        help_text="Token UUID de changement de numéro")
 
     def validate_token(self, value):
         """Nettoie et valide le token UUID."""
@@ -844,10 +864,7 @@ class PasswordForgotResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text=SECURITY_DATA_HELP_TEXT,
-    )
+    data = serializers.JSONField(help_text=SECURITY_DATA_HELP_TEXT)
 
 
 class PasswordResetConfirmResponseSerializer(serializers.Serializer):
@@ -857,9 +874,7 @@ class PasswordResetConfirmResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
-    )
+    data = serializers.JSONField(help_text=ADDITIONAL_DATA_HELP_TEXT)
 
 
 class PasswordChangeRequestResponseSerializer(serializers.Serializer):
@@ -869,10 +884,7 @@ class PasswordChangeRequestResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text=SECURITY_DATA_HELP_TEXT,
-    )
+    data = serializers.JSONField(help_text=SECURITY_DATA_HELP_TEXT)
 
 
 class PasswordChangeConfirmResponseSerializer(serializers.Serializer):
@@ -882,9 +894,7 @@ class PasswordChangeConfirmResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
-    )
+    data = serializers.JSONField(help_text=ADDITIONAL_DATA_HELP_TEXT)
 
 
 class ProfileUpdateResponseSerializer(serializers.Serializer):
@@ -894,9 +904,7 @@ class ProfileUpdateResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(), help_text="Données du profil mis à jour"
-    )
+    data = serializers.JSONField(help_text="Données du profil mis à jour")
 
 
 class PhoneChangeRequestResponseSerializer(serializers.Serializer):
@@ -906,10 +914,7 @@ class PhoneChangeRequestResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(),
-        help_text=SECURITY_DATA_HELP_TEXT,
-    )
+    data = serializers.JSONField(help_text=SECURITY_DATA_HELP_TEXT)
 
 
 class PhoneChangeConfirmResponseSerializer(serializers.Serializer):
@@ -919,6 +924,4 @@ class PhoneChangeConfirmResponseSerializer(serializers.Serializer):
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)
     message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
-    data = serializers.DictField(
-        child=serializers.CharField(), help_text=ADDITIONAL_DATA_HELP_TEXT
-    )
+    data = serializers.JSONField(help_text=ADDITIONAL_DATA_HELP_TEXT)

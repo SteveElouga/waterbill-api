@@ -140,6 +140,7 @@ class VerificationToken(models.Model):
     phone = models.CharField(
         max_length=15,
         blank=True,
+        null=True,
         help_text="Numéro de téléphone pour password_reset",
     )
 

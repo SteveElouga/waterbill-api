@@ -144,8 +144,19 @@ class AuthService:
         Returns:
             Dict[str, Any]: Profil utilisateur sérialisé
         """
-        serializer = UserSerializer(user)
-        return serializer.data
+        # Créer les données utilisateur manuellement pour éviter les problèmes avec DRF Spectacular
+        return {
+            "id": user.id,
+            "phone": user.phone,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "full_name": user.get_full_name(),
+            "email": user.email,
+            "address": user.address,
+            "apartment_name": user.apartment_name,
+            "date_joined": user.date_joined,
+            "is_active": user.is_active,
+        }
 
     @staticmethod
     def validate_phone_uniqueness(
@@ -788,10 +799,24 @@ class ProfileService:
 
             logger.info(f"Profil mis à jour pour {user.phone}")
 
+            # Créer les données utilisateur manuellement pour éviter les problèmes avec DRF Spectacular
+            user_data = {
+                "id": user.id,
+                "phone": user.phone,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "full_name": user.get_full_name(),
+                "email": user.email,
+                "address": user.address,
+                "apartment_name": user.apartment_name,
+                "date_joined": user.date_joined,
+                "is_active": user.is_active,
+            }
+            
             return {
                 "success": True,
                 "message": "Votre profil a été mis à jour avec succès.",
-                "user": UserSerializer(user).data,
+                "user": user_data,
             }
 
         except Exception as e:

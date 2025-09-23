@@ -12,7 +12,6 @@ drf-spectacular-sidecar==2025.9.1
 
 # Database
 psycopg2-binary==2.9.10
-psycopg-binary==3.2.10
 
 # SMS Gateway
 twilio==9.8.1

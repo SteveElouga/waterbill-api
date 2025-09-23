@@ -5,7 +5,7 @@ set -e
 echo "⏳ Attente de la base de données..."
 python - <<'PYCODE'
 import os, time, sys
-import psycopg
+import psycopg2
 from urllib.parse import urlparse
 
 url = os.environ.get("DATABASE_URL")
@@ -15,7 +15,7 @@ if not url:
 
 for i in range(30):
     try:
-        with psycopg.connect(url, connect_timeout=3) as conn:
+        with psycopg2.connect(url, connect_timeout=3) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT 1;")
                 print("✅ Base de données prête.")

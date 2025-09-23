@@ -72,7 +72,7 @@ REM Étape 5: Vérification finale
 echo 🔍 Vérification finale des installations principales...
 python -c "import django; print('  - Django:', django.get_version())" 2>nul || echo   - Django: ❌ Erreur
 python -c "import rest_framework; print('  - DRF:', rest_framework.VERSION)" 2>nul || echo   - DRF: ❌ Erreur
-python -c "import psycopg; print('  - PostgreSQL (psycopg): ✅ Installé')" 2>nul || echo   - PostgreSQL (psycopg): ❌ Erreur
+python -c "import psycopg2; print('  - PostgreSQL (psycopg2): ✅ Installé')" 2>nul || echo   - PostgreSQL (psycopg2): ❌ Erreur
 
 echo.
 echo 🎉 Installation terminée!

@@ -103,10 +103,10 @@ try {
 }
 
 try {
-    python -c "import psycopg; print('✅ Installé')" 2>&1 | Out-Null
-    Write-Host "  - PostgreSQL (psycopg): ✅ Installé" -ForegroundColor Green
+    python -c "import psycopg2; print('✅ Installé')" 2>&1 | Out-Null
+    Write-Host "  - PostgreSQL (psycopg2): ✅ Installé" -ForegroundColor Green
 } catch {
-    Write-Host "  - PostgreSQL (psycopg): ❌ Erreur" -ForegroundColor Red
+    Write-Host "  - PostgreSQL (psycopg2): ❌ Erreur" -ForegroundColor Red
 }
 
 Write-Host ""

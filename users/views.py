@@ -259,7 +259,7 @@ def profile_view(request: Request) -> Response:
 
     return Response(
         ResponseService.success_response(
-            message="Profil récupéré avec succès", data={"user": user_data}
+            message="Profil récupéré avec succès", data=user_data
         ),
         status=status.HTTP_200_OK,
     )
