@@ -12,6 +12,7 @@ from rest_framework import status
 from users.models import User, ActivationToken
 from users.services import ActivationService, RateLimitService
 from .test_settings import MockedTestCase, MockedAPITestCase
+from .test_whitelist_base import WhitelistAPITestCase
 
 
 class ActivationTokenModelTest(MockedTestCase):
@@ -120,7 +121,8 @@ class ActivationTokenModelTest(MockedTestCase):
         self.assertTrue(self.user.is_active)
 
         # Vérifier que le token est supprimé
-        self.assertFalse(ActivationToken.objects.filter(user=self.user).exists())
+        self.assertFalse(ActivationToken.objects.filter(
+            user=self.user).exists())
 
 
 class ActivationServiceTest(MockedTestCase):
@@ -163,7 +165,8 @@ class ActivationServiceTest(MockedTestCase):
         self.assertTrue(user.is_active)
 
         # Vérifier que le token est supprimé
-        self.assertFalse(ActivationToken.objects.filter(user=self.user).exists())
+        self.assertFalse(ActivationToken.objects.filter(
+            user=self.user).exists())
 
     def test_verify_activation_code_wrong_code(self):
         """Test de vérification avec un code incorrect."""
@@ -214,12 +217,13 @@ class ActivationServiceTest(MockedTestCase):
         self.assertEqual(token.send_count, 2)
 
 
-class ActivationAPITest(MockedAPITestCase):
+class ActivationAPITest(MockedAPITestCase, WhitelistAPITestCase):
     """Tests pour les endpoints d'activation."""
 
     def setUp(self):
         """Configuration initiale pour les tests."""
         super().setUp()
+        self.setUp_whitelist()
         self.user = User.objects.create_user(
             phone="670000000",
             first_name="Test",
@@ -229,6 +233,9 @@ class ActivationAPITest(MockedAPITestCase):
 
     def test_register_creates_inactive_user(self):
         """Test que l'inscription crée un utilisateur inactif."""
+        # Ajouter le numéro à la liste blanche
+        self.add_phone_to_whitelist("670111111", "Numéro de test activation")
+
         user_data = {
             "phone": "670111111",
             "first_name": "New",
@@ -238,7 +245,8 @@ class ActivationAPITest(MockedAPITestCase):
         }
 
         with self.settings(DEBUG=True):  # Utilise DummySmsGateway
-            response = self.client.post("/api/auth/register/", user_data, format="json")
+            response = self.client.post(
+                "/api/auth/register/", user_data, format="json")
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -329,13 +337,15 @@ class ActivationAPITest(MockedAPITestCase):
             "password": "testpass123",
         }
 
-        response = self.client.post("/api/auth/login/", login_data, format="json")
+        response = self.client.post(
+            "/api/auth/login/", login_data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = response.json()
         self.assertEqual(data["status"], "error")
-        self.assertIn("Numéro de téléphone ou mot de passe incorrect", data["message"])
+        self.assertIn(
+            "Numéro de téléphone ou mot de passe incorrect", data["message"])
 
     def test_login_active_user(self):
         """Test de connexion d'un utilisateur activé."""
@@ -348,7 +358,8 @@ class ActivationAPITest(MockedAPITestCase):
             "password": "testpass123",
         }
 
-        response = self.client.post("/api/auth/login/", login_data, format="json")
+        response = self.client.post(
+            "/api/auth/login/", login_data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

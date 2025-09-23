@@ -10,16 +10,20 @@ from django.urls import reverse
 from rest_framework import status
 
 from .test_settings import MockedAPITestCase
+from .test_whitelist_base import WhitelistAPITestCase
 
 User = get_user_model()
 
 
-class AuthenticationViewsTestCase(MockedAPITestCase):
+class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
     """Tests pour les vues d'authentification."""
 
     def setUp(self) -> None:
         """Configuration initiale pour les tests."""
+        # Appeler setUp de MockedAPITestCase
         super().setUp()
+        # Puis configurer la liste blanche
+        self.setUp_whitelist()
 
         self.register_data = {
             "phone": "237658552294",  # Numéro Cameroun valide
@@ -32,7 +36,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
             "apartment_name": "A1",
         }
 
-        self.login_data = {"phone": "237658552295", "password": "testpassword123"}
+        self.login_data = {"phone": "237658552295",
+                           "password": "testpassword123"}
 
         self.existing_user = User.objects.create_user(
             phone="237658552295",  # Numéro différent pour éviter les conflits
@@ -55,8 +60,11 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         """Test d'inscription réussie."""
         # Nettoyer le cache avant le test
         from django.core.cache import cache
-
         cache.clear()
+
+        # Ajouter le numéro à la liste blanche
+        self.add_phone_to_whitelist(
+            self.register_data["phone"], "Numéro de test d'inscription")
 
         url = reverse("users:register")
         response = self.client.post(url, self.register_data, format="json")
@@ -76,7 +84,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+237658552294")
+        self.assertEqual(
+            self.mock_sms.sent_messages[0]["phone"], "+237658552294")
 
         # Note: Les tokens ne sont pas générés lors de l'inscription
         # Ils sont générés seulement lors de la connexion
@@ -115,11 +124,15 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
     def test_register_view_password_mismatch(self) -> None:
         """Test d'inscription avec mots de passe différents."""
+        # Ajouter le numéro à la liste blanche
+        test_phone = "237658552296"
+        self.add_phone_to_whitelist(test_phone, "Numéro de test pour mismatch")
+
         url = reverse("users:register")
 
         # Mots de passe différents avec un numéro unique
         invalid_data = self.register_data.copy()
-        invalid_data["phone"] = "237658552296"  # Numéro unique
+        invalid_data["phone"] = test_phone
         invalid_data["email"] = "unique@example.com"  # Email unique
         invalid_data["password_confirm"] = "differentpassword"
 
@@ -204,7 +217,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         """Test de récupération du profil avec authentification."""
         # Obtenir un token d'authentification
         login_url = reverse("users:login")
-        login_response = self.client.post(login_url, self.login_data, format="json")
+        login_response = self.client.post(
+            login_url, self.login_data, format="json")
         access_token = login_response.json()["data"]["tokens"]["access"]
 
         # Accéder au profil avec le token
@@ -236,13 +250,17 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         """Test du nettoyage du numéro de téléphone dans les vues."""
         # Nettoyer le cache avant le test
         from django.core.cache import cache
-
         cache.clear()
+
+        # Ajouter le numéro à la liste blanche (format nettoyé)
+        test_phone = "237 67 00 002"
+        self.add_phone_to_whitelist(
+            test_phone, "Numéro de test pour nettoyage")
 
         # Test avec numéro formaté pour l'inscription
         url = reverse("users:register")
         data = self.register_data.copy()
-        data["phone"] = "237 67 00 002"  # Nouveau numéro formaté unique
+        data["phone"] = test_phone  # Nouveau numéro formaté unique
         data["email"] = "phone.cleaning@example.com"  # Email unique
 
         response = self.client.post(url, data, format="json")
@@ -255,7 +273,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+2376700002")
+        self.assertEqual(
+            self.mock_sms.sent_messages[0]["phone"], "+2376700002")
 
         # Test avec numéro formaté pour la connexion
         login_url = reverse("users:login")
@@ -267,7 +286,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         response = self.client.post(login_url, login_data, format="json")
         # Accepter 200 (succès) ou 400 (erreur de connexion)
         self.assertIn(
-            response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [
+                status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
         )
 
     def test_apartment_name_validation(self) -> None:
@@ -296,7 +316,8 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
 
         # Accepter 201 (succès) ou 400 (erreur SMS Twilio)
         self.assertIn(
-            response.status_code, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [
+                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
         )
 
         if response.status_code == status.HTTP_201_CREATED:

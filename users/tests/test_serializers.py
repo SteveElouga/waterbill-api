@@ -9,11 +9,12 @@ from django.contrib.auth import get_user_model
 
 from users.serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from .test_settings import MockedTestCase
+from .test_whitelist_base import WhitelistTestCase
 
 User = get_user_model()
 
 
-class RegisterSerializerTestCase(MockedTestCase):
+class RegisterSerializerTestCase(MockedTestCase, WhitelistTestCase):
     """Tests pour le RegisterSerializer."""
 
     def setUp(self) -> None:
@@ -35,6 +36,10 @@ class RegisterSerializerTestCase(MockedTestCase):
 
     def test_valid_registration_data(self) -> None:
         """Test avec des données d'inscription valides."""
+        # Ajouter le numéro à la liste blanche
+        self.add_phone_to_whitelist(
+            self.valid_data["phone"], "Numéro de test serializer")
+
         serializer = RegisterSerializer(data=self.valid_data)
         self.assertTrue(serializer.is_valid())
 
@@ -72,6 +77,10 @@ class RegisterSerializerTestCase(MockedTestCase):
 
     def test_password_confirmation_mismatch(self) -> None:
         """Test de non-correspondance des mots de passe."""
+        # Ajouter le numéro à la liste blanche
+        self.add_phone_to_whitelist(
+            self.valid_data["phone"], "Numéro de test mismatch")
+
         data = self.valid_data.copy()
         data["password_confirm"] = "differentpassword"
         serializer = RegisterSerializer(data=data)
@@ -105,6 +114,9 @@ class RegisterSerializerTestCase(MockedTestCase):
             "email": "phonetest@example.com",  # Email unique
             "address": "Test Address",
         }
+
+        # Ajouter le numéro à la liste blanche
+        self.add_phone_to_whitelist(data["phone"], "Numéro de test nettoyage")
 
         serializer = RegisterSerializer(data=data)
 

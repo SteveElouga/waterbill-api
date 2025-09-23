@@ -9,15 +9,17 @@ from rest_framework import status
 from unittest.mock import patch, MagicMock
 
 from users.utils.phone_utils import normalize_phone
+from .test_whitelist_base import WhitelistAPITestCase
 
 User = get_user_model()
 
 
-class InternationalPhoneTestCase(APITestCase):
+class InternationalPhoneTestCase(APITestCase, WhitelistAPITestCase):
     """Tests pour vérifier le format international des numéros de téléphone."""
 
     def setUp(self):
         """Configuration des tests."""
+        self.setUp_whitelist()
         self.register_url = "/api/auth/register/"
         self.login_url = "/api/auth/login/"
         self.activate_url = "/api/auth/activate/"
@@ -41,6 +43,10 @@ class InternationalPhoneTestCase(APITestCase):
             # 6 derniers chiffres du timestamp
             unique_suffix = str(int(time.time() * 1000))[-6:]
             phone_number = f"675799{unique_suffix}"
+            
+            # Ajouter le numéro à la liste blanche
+            self.add_phone_to_whitelist(phone_number, f"Numéro de test international {unique_suffix}")
+            
             data = {
                 "phone": phone_number,  # Sans le + - numéro unique
                 "first_name": "John",
@@ -73,6 +79,10 @@ class InternationalPhoneTestCase(APITestCase):
             # 6 derniers chiffres du timestamp
             unique_suffix = str(int(time.time() * 1000))[-6:]
             phone_number = f"675799{unique_suffix}"
+            
+            # Ajouter le numéro à la liste blanche (sans le +)
+            self.add_phone_to_whitelist(phone_number, f"Numéro de test plus {unique_suffix}")
+            
             data = {
                 "phone": f"+{phone_number}",  # Avec le + - numéro unique
                 "first_name": "Jane",
@@ -213,6 +223,10 @@ class InternationalPhoneTestCase(APITestCase):
             for i, phone in enumerate(test_cases):
                 with self.subTest(phone=phone):
                     unique_id = base_timestamp + i
+                    
+                    # Ajouter le numéro à la liste blanche
+                    self.add_phone_to_whitelist(phone, f"Numéro de test format {unique_id}")
+                    
                     data = {
                         "phone": phone,
                         "first_name": f"Test{unique_id}",
