@@ -1486,6 +1486,7 @@ check_api_health()
 - `"😱 Could not render OperationContainer"` dans l'interface Swagger
 - Configuration incorrecte de la sécurité OpenAPI 3.0
 - Serializers incompatibles avec DRF Spectacular
+- **Endpoint logout incorrectement configuré** : Nécessite maintenant une authentification
 
 **Tests échouant :**
 - 5 tests échouaient après les modifications des services SMS
@@ -1527,7 +1528,8 @@ SPECTACULAR_SETTINGS = {
     auth=[{"jwtAuth": []}],  # ✅ Correct (objet)
     # auth=["jwtAuth"],     # ❌ Incorrect (chaîne)
 )
-def profile_view(request):
+@permission_classes([IsAuthenticated])  # ✅ Nécessaire pour logout
+def logout_view(request):
     pass
 ```
 

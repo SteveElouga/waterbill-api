@@ -523,10 +523,10 @@ def token_refresh_view(request: Request) -> Response:
     request=LogoutSerializer,
     responses={200: LogoutResponseSerializer, 400: ErrorResponseSerializer},
     tags=["Authentification"],
-    auth=[],
+    auth=[{"jwtAuth": []}],
 )
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @throttle_classes([AuthRateThrottle])
 def logout_view(request: Request) -> Response:
     """

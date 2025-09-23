@@ -2208,8 +2208,25 @@ SPECTACULAR_SETTINGS = {
 
 **Endpoints avec permissions correctes :**
 
-- **Endpoints publics** : `auth=[]` - Aucune icône de cadenas
-- **Endpoints protégés** : `auth=[{"jwtAuth": []}]` - Icône de cadenas + section Authorization
+**Endpoints publics** (`auth=[]`) - Aucune icône de cadenas :
+
+- `POST /api/auth/register/` - Inscription
+- `POST /api/auth/login/` - Connexion
+- `POST /api/auth/activate/` - Activation du compte
+- `POST /api/auth/resend-code/` - Renvoyer code d'activation
+- `POST /api/auth/token/refresh/` - Rafraîchir token JWT
+- `POST /api/auth/password/forgot/` - Mot de passe oublié
+- `POST /api/auth/password/reset/confirm/` - Confirmation reset mot de passe
+- `POST /api/auth/password/change/confirm/` - Confirmation changement mot de passe
+- `POST /api/auth/phone/change/confirm/` - Confirmation changement téléphone
+
+**Endpoints protégés** (`auth=[{"jwtAuth": []}]`) - Icône de cadenas + section Authorization :
+
+- `GET /api/auth/profile/` - Récupérer profil utilisateur
+- `POST /api/auth/logout/` - Déconnexion (nécessite token pour blacklister)
+- `POST /api/auth/password/change/request/` - Demander changement mot de passe
+- `PUT /api/auth/me/` - Mettre à jour profil utilisateur
+- `POST /api/auth/phone/change/request/` - Demander changement numéro
 
 #### 🔧 Corrections Swagger Appliquées
 
@@ -2218,6 +2235,7 @@ SPECTACULAR_SETTINGS = {
 - Erreur "😱 Could not render OperationContainer" dans l'interface Swagger
 - Configuration incorrecte de la sécurité OpenAPI 3.0
 - Serializers incompatibles avec DRF Spectacular
+- **Endpoint logout incorrectement configuré** : Nécessite maintenant une authentification (logique !)
 
 **Solutions implémentées :**
 
@@ -2236,12 +2254,22 @@ SPECTACULAR_SETTINGS = {
    ```
 
 3. **Structure de données cohérente :**
+
    ```python
    # ProfileDataSerializer avec champs explicites
    class ProfileDataSerializer(serializers.Serializer):
        id = serializers.IntegerField()
        phone = serializers.CharField()
        # ... autres champs définis explicitement
+   ```
+
+4. **Endpoint logout corrigé :**
+   ```python
+   # Logout nécessite maintenant une authentification (logique !)
+   @extend_schema(auth=[{"jwtAuth": []}])
+   @permission_classes([IsAuthenticated])  # ✅ Correct
+   def logout_view(request):
+       pass
    ```
 
 #### 🚨 Gestion des Erreurs
