@@ -220,7 +220,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase):
         self.assertEqual(data["message"], "Profil récupéré avec succès")
 
         # Vérifier les données utilisateur
-        user_data = data["data"]["user"]
+        user_data = data["data"]
         # Format international
         self.assertEqual(user_data["phone"], "+237658552295")
         self.assertEqual(user_data["first_name"], "Jane")

@@ -54,6 +54,66 @@ class MockSmsGateway:
 
         return True
 
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        """
+        Simule l'envoi d'un code de vérification avec lien de redirection.
+
+        Args:
+            phone: Numéro de téléphone de destination
+            code: Code de vérification à envoyer
+            operation_type: Type d'opération (password_reset, password_change, phone_change)
+            redirect_url: URL de redirection (optionnel)
+
+        Returns:
+            bool: True si l'envoi a réussi, False sinon
+        """
+        # Enregistrer le message envoyé pour les tests
+        self.sent_messages.append(
+            {
+                "phone": phone,
+                "code": code,
+                "operation_type": operation_type,
+                "redirect_url": redirect_url,
+                "timestamp": None,
+            }
+        )
+
+        if not self.should_succeed:
+            if self.error_message:
+                raise ValueError(self.error_message)
+            return False
+
+        return True
+
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+        """
+        Simule l'envoi d'un message de confirmation.
+
+        Args:
+            phone: Numéro de téléphone de destination
+            operation_type: Type d'opération (password_reset, password_change, phone_change)
+            details: Détails supplémentaires (optionnel)
+
+        Returns:
+            bool: True si l'envoi a réussi, False sinon
+        """
+        # Enregistrer le message envoyé pour les tests
+        self.sent_messages.append(
+            {
+                "phone": phone,
+                "operation_type": operation_type,
+                "details": details,
+                "timestamp": None,
+            }
+        )
+
+        if not self.should_succeed:
+            if self.error_message:
+                raise ValueError(self.error_message)
+            return False
+
+        return True
+
     def is_available(self) -> bool:
         """
         Simule la disponibilité du service SMS.

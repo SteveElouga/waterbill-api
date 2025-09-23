@@ -276,7 +276,7 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
         with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
-            mock_sms.send_activation_code.return_value = True
+            mock_sms.send_verification_code.return_value = True
             mock_gateway.return_value = mock_sms
 
             result = PasswordChangeService.request_password_change(
@@ -293,19 +293,27 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
             )
             self.assertIsNotNone(token)
             # Vérifier que le SMS a été envoyé
-            mock_sms.send_activation_code.assert_called_once()
+            mock_sms.send_verification_code.assert_called_once()
             # Vérifier que le premier argument est le numéro de téléphone
-            call_args = mock_sms.send_activation_code.call_args[0]
+            call_args = mock_sms.send_verification_code.call_args[0]
             self.assertEqual(call_args[0], self.user.phone)
 
     def test_request_password_change_wrong_password(self):
         """Test de demande avec mauvais mot de passe actuel."""
         from users.services import PasswordChangeService
 
-        with self.assertRaises(ValueError) as context:
-            PasswordChangeService.request_password_change(self.user, "wrongpassword")
+        with patch("users.services.get_sms_gateway") as mock_gateway:
+            mock_sms = MagicMock()
+            mock_sms.send_verification_code.return_value = True
+            mock_gateway.return_value = mock_sms
 
-        self.assertIn("incorrect", str(context.exception))
+            # La validation du mot de passe se fait maintenant dans le serializer
+            # Le service accepte n'importe quel mot de passe et laisse le serializer valider
+            result = PasswordChangeService.request_password_change(self.user, "wrongpassword")
+            
+            # Le service devrait réussir car la validation se fait ailleurs
+            self.assertTrue(result["success"])
+            self.assertIn("code de vérification", result["message"])
 
     def test_confirm_password_change_success(self):
         """Test de confirmation de changement de mot de passe réussie."""

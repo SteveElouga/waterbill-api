@@ -270,7 +270,7 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
 
         with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
-            mock_sms.send_activation_code.return_value = True
+            mock_sms.send_verification_code.return_value = True
             mock_gateway.return_value = mock_sms
 
             result = PhoneChangeService.request_phone_change(self.user, "+237670000001")
@@ -285,9 +285,9 @@ class PhoneChangeServiceTestCase(MockedAPITestCase):
             )
             self.assertIsNotNone(token)
             self.assertEqual(token.phone, "+237670000001")
-            mock_sms.send_activation_code.assert_called_once()
+            mock_sms.send_verification_code.assert_called_once()
             # Vérifier que le premier argument est le nouveau numéro de téléphone
-            call_args = mock_sms.send_activation_code.call_args[0]
+            call_args = mock_sms.send_verification_code.call_args[0]
             self.assertEqual(call_args[0], "+237670000001")
 
     def test_request_phone_change_duplicate_phone(self):

@@ -285,7 +285,7 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
 
         with patch("users.services.get_sms_gateway") as mock_gateway:
             mock_sms = MagicMock()
-            mock_sms.send_activation_code.return_value = True
+            mock_sms.send_verification_code.return_value = True
             mock_gateway.return_value = mock_sms
 
             result = PasswordResetService.request_password_reset("+237670000000")
@@ -299,9 +299,9 @@ class PasswordResetServiceTestCase(MockedAPITestCase):
                 verification_type="password_reset", user=self.user
             )
             self.assertIsNotNone(token)
-            mock_sms.send_activation_code.assert_called_once()
+            mock_sms.send_verification_code.assert_called_once()
             # Vérifier que le premier argument est le numéro de téléphone
-            call_args = mock_sms.send_activation_code.call_args[0]
+            call_args = mock_sms.send_verification_code.call_args[0]
             self.assertEqual(call_args[0], "+237670000000")
 
     def test_request_password_reset_nonexistent_user(self):
