@@ -699,6 +699,59 @@ http://localhost:8000/
   - **Action** : Ajoute le refresh token dans la blacklist
   - **Throttling** : 30 requêtes/minute par IP
 
+#### 🔐 Fonctionnalités de Sécurité Avancées
+
+Le système inclut des fonctionnalités de sécurité étendues pour toutes les opérations sensibles :
+
+- **POST** `/api/auth/password/forgot/`
+
+  - **Description** : Demande de réinitialisation de mot de passe
+  - **Authentification** : Aucune
+  - **Payload** : `{"phone": "670000000"}`
+  - **SMS envoyé** : Code de vérification + lien de redirection sécurisé
+  - **Sécurité** : Retourne toujours un succès (même si utilisateur inexistant)
+
+- **POST** `/api/auth/password/reset/confirm/`
+
+  - **Description** : Confirmation de réinitialisation avec code SMS
+  - **Authentification** : Aucune
+  - **Payload** : `{"token": "uuid", "code": "123456", "new_password": "nouveau_mot_de_passe"}`
+  - **SMS envoyé** : Confirmation automatique après réinitialisation réussie
+
+- **POST** `/api/auth/password/change/request/`
+
+  - **Description** : Demande de changement de mot de passe (utilisateur authentifié)
+  - **Authentification** : JWT requise
+  - **Payload** : `{"current_password": "mot_de_passe_actuel"}`
+  - **SMS envoyé** : Code de vérification + lien de redirection sécurisé
+
+- **POST** `/api/auth/password/change/confirm/`
+
+  - **Description** : Confirmation de changement avec code SMS
+  - **Authentification** : Aucune
+  - **Payload** : `{"token": "uuid", "code": "123456", "new_password": "nouveau_mot_de_passe"}`
+  - **SMS envoyé** : Confirmation automatique après changement réussi
+
+- **POST** `/api/auth/phone/change/request/`
+
+  - **Description** : Demande de changement de numéro de téléphone
+  - **Authentification** : JWT requise
+  - **Payload** : `{"new_phone": "+675799744"}`
+  - **SMS envoyé** : Code de vérification + lien de redirection sur le NOUVEAU numéro
+
+- **POST** `/api/auth/phone/change/confirm/`
+
+  - **Description** : Confirmation de changement avec code SMS
+  - **Authentification** : Aucune
+  - **Payload** : `{"token": "uuid", "code": "123456"}`
+  - **SMS envoyé** : Confirmations automatiques sur l'ANCIEN et le NOUVEAU numéro
+
+- **PUT** `/api/auth/me/`
+  - **Description** : Mise à jour du profil utilisateur
+  - **Authentification** : JWT requise
+  - **Payload** : `{"first_name": "John", "last_name": "Doe", "email": "john@example.com"}`
+  - **Note** : Le numéro de téléphone ne peut pas être modifié via cet endpoint
+
 ### Documentation de l'API
 
 - **GET** `/api/schema/` : Schéma OpenAPI/Swagger
@@ -762,6 +815,9 @@ ALLOWED_HOSTS={ALLOWED_HOSTS}
 # TWILIO_ACCOUNT_SID={TWILIO_ACCOUNT_SID}
 # TWILIO_AUTH_TOKEN={TWILIO_AUTH_TOKEN}
 # TWILIO_FROM_NUMBER={TWILIO_FROM_NUMBER}
+
+# Frontend URL pour les liens de redirection SMS (optionnel)
+# FRONTEND_URL=https://waterbill.app
 
 # Cache Redis (pour throttling optimisé)
 # CACHE_URL=redis://redis:6379/1
@@ -1923,6 +1979,8 @@ LOGGING = {
 - ✅ Mots de passe PostgreSQL sécurisés
 - ✅ `DEBUG=False` en production
 - ✅ `SECRET_KEY` unique par environnement
+- ✅ SMS de confirmation pour toutes les opérations sensibles
+- ✅ Liens de redirection sécurisés avec tokens UUID
 
 ### 🔑 Génération sécurisée des clés secrètes
 
@@ -1981,6 +2039,115 @@ python -c "import secrets, string; print(''.join(secrets.choice(string.ascii_let
 2. **Définir** `POSTGRES_PASSWORD` dans votre fichier `.env`
 3. **Vérifier** que `DATABASE_URL` utilise les variables d'environnement
 4. **Ne jamais commiter** les mots de passe dans Git
+
+### 📱 SMS de Confirmation et Sécurité
+
+Le système WaterBill inclut des fonctionnalités de sécurité avancées avec SMS automatiques pour toutes les opérations sensibles.
+
+#### 🔐 Fonctionnalités de Sécurité SMS
+
+**SMS de Confirmation Automatique :**
+
+- ✅ **Changement de mot de passe** : Confirmation automatique après chaque modification
+- ✅ **Mot de passe oublié** : Confirmation après réinitialisation réussie
+- ✅ **Changement de numéro** : Confirmations sur l'ancien ET le nouveau numéro
+
+**Liens de Redirection Sécurisés :**
+
+- ✅ **URLs générées automatiquement** avec tokens UUID cryptographiquement sécurisés
+- ✅ **Expiration automatique** : Tokens valides pendant 10 minutes
+- ✅ **One-shot** : Chaque token utilisable une seule fois
+- ✅ **Redirection vers frontend** approprié selon le type d'opération
+
+#### 📋 Types d'Opérations Sécurisées
+
+| Opération                         | Endpoint                                  | SMS Envoyé                       | Lien de Redirection           |
+| --------------------------------- | ----------------------------------------- | -------------------------------- | ----------------------------- |
+| **Réinitialisation mot de passe** | `POST /api/auth/password/forgot/`         | Code + lien                      | `/reset-password?token=uuid`  |
+| **Confirmation réinitialisation** | `POST /api/auth/password/reset/confirm/`  | Confirmation                     | -                             |
+| **Changement mot de passe**       | `POST /api/auth/password/change/request/` | Code + lien                      | `/change-password?token=uuid` |
+| **Confirmation changement**       | `POST /api/auth/password/change/confirm/` | Confirmation                     | -                             |
+| **Changement numéro**             | `POST /api/auth/phone/change/request/`    | Code + lien (nouveau numéro)     | `/change-phone?token=uuid`    |
+| **Confirmation changement**       | `POST /api/auth/phone/change/confirm/`    | Confirmations (ancien + nouveau) | -                             |
+
+#### 🛡️ Sécurité des Tokens
+
+- **Génération sécurisée** : UUID v4 cryptographiquement sécurisés
+- **Validation stricte** : Vérification du type d'opération et de l'utilisateur
+- **Expiration automatique** : 10 minutes maximum
+- **Invalidation** : Tokens marqués comme utilisés après consommation
+- **🧹 Nettoyage automatique** : Suppression des caractères invisibles Unicode
+
+#### 📱 Messages SMS
+
+**Codes de Vérification (avec lien) :**
+
+```
+Votre code de vérification pour [opération] WaterBill est: 123456.
+Lien de redirection: https://waterbill.app/[endpoint]?token=uuid.
+Ce code expire dans 10 minutes. Ne partagez pas ce code.
+```
+
+**Messages de Confirmation :**
+
+```
+Votre [opération] a été effectuée avec succès.
+Si vous n'avez pas effectué cette action, contactez le support.
+```
+
+#### 🔧 Configuration SMS
+
+**Variables d'environnement :**
+
+```bash
+# Twilio (optionnel - pour SMS réels en production)
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_FROM_NUMBER=your_twilio_number
+
+# Frontend URL pour les liens de redirection
+FRONTEND_URL=https://waterbill.app
+```
+
+**Modes de fonctionnement :**
+
+- **Développement** : `DummySmsGateway` - SMS simulés dans les logs
+- **Production** : `TwilioSmsGateway` - SMS réels via Twilio (si configuré)
+
+#### 🧹 Nettoyage Automatique des Tokens
+
+Le système inclut une **protection automatique** contre les caractères invisibles dans les tokens :
+
+**Caractères automatiquement supprimés :**
+
+- `\u2060` - WORD JOINER (caractère invisible le plus courant)
+- `\u200B` - ZERO WIDTH SPACE
+- `\u200C` - ZERO WIDTH NON-JOINER
+- `\u200D` - ZERO WIDTH JOINER
+- `\uFEFF` - ZERO WIDTH NO-BREAK SPACE (BOM)
+- Espaces, tabs, newlines, etc.
+
+**Protection à plusieurs niveaux :**
+
+1. **Génération des URLs** : Tokens nettoyés avant inclusion dans les liens SMS
+2. **Validation des serializers** : Nettoyage automatique avant validation UUID
+3. **Robustesse** : Compatible avec tous les clients HTTP et interfaces
+
+**Exemple de problème résolu :**
+
+```json
+// Avant (échoue)
+{"token": "9320ee31-d452-42c8-92d4-70c6ee434fc0⁠⁠", "code": "123456"}
+
+// Après (fonctionne automatiquement)
+{"token": "9320ee31-d452-42c8-92d4-70c6ee434fc0", "code": "123456"}
+```
+
+#### 🚨 Gestion des Erreurs
+
+- **Non-bloquant** : L'échec d'envoi de SMS de confirmation n'interrompt pas l'opération
+- **Logging complet** : Toutes les tentatives d'envoi sont loggées
+- **Fallback gracieux** : Le système continue de fonctionner même si SMS indisponible
 
 ## 📞 Support
 

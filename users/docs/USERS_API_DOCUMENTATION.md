@@ -627,10 +627,18 @@ Retry-After: 60
 ### **🏗️ Architecture des gateways SMS**
 
 ```python
-# Interface abstraite
+# Interface abstraite étendue
 class ISmsGateway(ABC):
     @abstractmethod
     def send_activation_code(self, phone: str, code: str) -> bool:
+        pass
+
+    @abstractmethod
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        pass
+
+    @abstractmethod
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
         pass
 
     @abstractmethod
@@ -649,6 +657,37 @@ class DummySmsGateway(ISmsGateway):
         print(f"🔐 Code d'activation pour {phone}: {code}")
         return True
 
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        messages = {
+            "password_reset": "réinitialisation de mot de passe",
+            "password_change": "changement de mot de passe",
+            "phone_change": "changement de numéro de téléphone"
+        }
+        operation_name = messages.get(operation_type, operation_type)
+        if redirect_url:
+            logger.info(f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}")
+            logger.info(f"🔗 Lien de redirection: {redirect_url}")
+            print(f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
+            print(f"🔗 Lien: {redirect_url}")
+        else:
+            logger.info(f"📱 SMS SIMULÉ - Code de vérification pour {operation_name} - {phone}: {code}")
+            print(f"🔐 Code de vérification pour {operation_name} - {phone}: {code}")
+        return True
+
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+        messages = {
+            "password_reset": "réinitialisation de mot de passe",
+            "password_change": "changement de mot de passe",
+            "phone_change": "changement de numéro de téléphone"
+        }
+        operation_name = messages.get(operation_type, operation_type)
+        message = f"✅ Votre {operation_name} a été effectuée avec succès."
+        if details:
+            message += f" {details}"
+        logger.info(f"📱 SMS SIMULÉ - Confirmation {operation_name} - {phone}: {message}")
+        print(f"✅ Confirmation {operation_name} - {phone}: {message}")
+        return True
+
     def is_available(self) -> bool:
         return True
 ```
@@ -656,7 +695,9 @@ class DummySmsGateway(ISmsGateway):
 **Caractéristiques :**
 
 - ✅ Aucune configuration requise
-- ✅ Codes affichés dans les logs
+- ✅ Codes et liens affichés dans les logs
+- ✅ Support des codes de vérification avec liens
+- ✅ Support des messages de confirmation
 - ✅ Parfait pour le développement et les tests
 - ✅ Toujours disponible
 
@@ -674,7 +715,54 @@ class TwilioSmsGateway(ISmsGateway):
             f"Ce code expire dans 10 minutes. Ne partagez pas ce code."
         )
 
-        message = self.client.messages.create(
+        self.client.messages.create(
+            body=message,
+            from_=self.from_number,
+            to=phone,
+        )
+        return True
+
+    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+        messages = {
+            "password_reset": "réinitialisation de mot de passe",
+            "password_change": "changement de mot de passe",
+            "phone_change": "changement de numéro de téléphone"
+        }
+        operation_name = messages.get(operation_type, operation_type)
+
+        if redirect_url:
+            message = (
+                f"Votre code de vérification pour {operation_name} WaterBill est: {code}. "
+                f"Lien de redirection: {redirect_url}. "
+                f"Ce code expire dans 10 minutes. Ne partagez pas ce code."
+            )
+        else:
+            message = (
+                f"Votre code de vérification pour {operation_name} WaterBill est: {code}. "
+                f"Ce code expire dans 10 minutes. Ne partagez pas ce code."
+            )
+
+        self.client.messages.create(
+            body=message,
+            from_=self.from_number,
+            to=phone,
+        )
+        return True
+
+    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+        messages = {
+            "password_reset": "réinitialisation de mot de passe",
+            "password_change": "changement de mot de passe",
+            "phone_change": "changement de numéro de téléphone"
+        }
+        operation_name = messages.get(operation_type, operation_type)
+
+        message = f"✅ Votre {operation_name} a été effectuée avec succès."
+        if details:
+            message += f" {details}"
+        message += " Si vous n'avez pas effectué cette action, contactez le support."
+
+        self.client.messages.create(
             body=message,
             from_=self.from_number,
             to=phone,
@@ -705,6 +793,59 @@ def get_sms_gateway() -> ISmsGateway:
         return DummySmsGateway()  # Fallback sécurisé
 ```
 
+### **🔗 Liens de Redirection Sécurisés**
+
+#### **Génération automatique des URLs**
+
+```python
+def generate_redirect_url(token: str, operation_type: str, base_url: str = None) -> str:
+    """
+    Génère une URL de redirection avec token nettoyé pour les opérations de sécurité.
+    """
+    # Nettoyer le token automatiquement
+    clean_token_value = clean_token(token)
+
+    if not base_url:
+        from django.conf import settings
+        base_url = getattr(settings, 'FRONTEND_URL', 'https://waterbill.app')
+
+    endpoints = {
+        "password_reset": "/reset-password",
+        "password_change": "/change-password",
+        "phone_change": "/change-phone"
+    }
+
+    endpoint = endpoints.get(operation_type, "/verify")
+    return f"{base_url}{endpoint}?token={clean_token_value}"
+```
+
+#### **🧹 Nettoyage automatique des tokens**
+
+```python
+def clean_token(token: str) -> str:
+    """
+    Nettoie un token UUID des caractères invisibles et espaces.
+    """
+    # Supprimer les caractères invisibles Unicode courants
+    invisible_chars = [
+        '\u2060',  # WORD JOINER
+        '\u200B',  # ZERO WIDTH SPACE
+        '\u200C',  # ZERO WIDTH NON-JOINER
+        '\u200D',  # ZERO WIDTH JOINER
+        '\uFEFF',  # ZERO WIDTH NO-BREAK SPACE (BOM)
+        ' ',       # SPACE normal
+        '\t',      # TAB
+        '\n',      # NEWLINE
+        '\r',      # CARRIAGE RETURN
+    ]
+
+    cleaned_token = str(token)
+    for char in invisible_chars:
+        cleaned_token = cleaned_token.replace(char, '')
+
+    return cleaned_token
+```
+
 ### **📋 Messages SMS**
 
 #### **Format du message d'activation**
@@ -714,14 +855,84 @@ Votre code d'activation WaterBill est: 123456.
 Ce code expire dans 10 minutes. Ne partagez pas ce code.
 ```
 
+#### **Format du message de vérification (avec lien)**
+
+```
+Votre code de vérification pour [opération] WaterBill est: 123456.
+Lien de redirection: https://waterbill.app/[endpoint]?token=uuid.
+Ce code expire dans 10 minutes. Ne partagez pas ce code.
+```
+
+#### **Format du message de confirmation**
+
+```
+✅ Votre [opération] a été effectuée avec succès.
+Si vous n'avez pas effectué cette action, contactez le support.
+```
+
 #### **Caractéristiques des messages**
 
-| Aspect         | Valeur          | Description                    |
-| -------------- | --------------- | ------------------------------ |
-| **Longueur**   | ~100 caractères | Optimisé pour tous les réseaux |
-| **Langue**     | Français        | Adapté au contexte             |
-| **Expiration** | 10 minutes      | Mentionnée dans le message     |
-| **Sécurité**   | Avertissement   | Ne pas partager le code        |
+| Aspect         | Valeur              | Description                     |
+| -------------- | ------------------- | ------------------------------- |
+| **Longueur**   | ~100-200 caractères | Optimisé pour tous les réseaux  |
+| **Langue**     | Français            | Adapté au contexte              |
+| **Expiration** | 10 minutes          | Mentionnée dans le message      |
+| **Sécurité**   | Avertissement       | Ne pas partager le code         |
+| **Liens**      | URLs sécurisées     | Tokens nettoyés automatiquement |
+
+### **🔐 Fonctionnalités de Sécurité Avancées**
+
+#### **SMS de Confirmation Automatique**
+
+Le système inclut des fonctionnalités de sécurité étendues pour toutes les opérations sensibles :
+
+- ✅ **Changement de mot de passe** : Confirmation automatique après chaque modification
+- ✅ **Mot de passe oublié** : Confirmation après réinitialisation réussie
+- ✅ **Changement de numéro** : Confirmations sur l'ancien ET le nouveau numéro
+
+#### **Types d'Opérations Sécurisées**
+
+| Opération                         | Endpoint                                  | SMS Envoyé                       | Lien de Redirection           |
+| --------------------------------- | ----------------------------------------- | -------------------------------- | ----------------------------- |
+| **Réinitialisation mot de passe** | `POST /api/auth/password/forgot/`         | Code + lien                      | `/reset-password?token=uuid`  |
+| **Confirmation réinitialisation** | `POST /api/auth/password/reset/confirm/`  | Confirmation                     | -                             |
+| **Changement mot de passe**       | `POST /api/auth/password/change/request/` | Code + lien                      | `/change-password?token=uuid` |
+| **Confirmation changement**       | `POST /api/auth/password/change/confirm/` | Confirmation                     | -                             |
+| **Changement numéro**             | `POST /api/auth/phone/change/request/`    | Code + lien (nouveau numéro)     | `/change-phone?token=uuid`    |
+| **Confirmation changement**       | `POST /api/auth/phone/change/confirm/`    | Confirmations (ancien + nouveau) | -                             |
+
+#### **🛡️ Sécurité des Tokens**
+
+- **Génération sécurisée** : UUID v4 cryptographiquement sécurisés
+- **Validation stricte** : Vérification du type d'opération et de l'utilisateur
+- **Expiration automatique** : 10 minutes maximum
+- **Invalidation** : Tokens marqués comme utilisés après consommation
+- **🧹 Nettoyage automatique** : Suppression des caractères invisibles Unicode
+
+#### **🔧 Configuration SMS**
+
+**Variables d'environnement :**
+
+```bash
+# Twilio (optionnel - pour SMS réels en production)
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_FROM_NUMBER=your_twilio_number
+
+# Frontend URL pour les liens de redirection
+FRONTEND_URL=https://waterbill.app
+```
+
+**Modes de fonctionnement :**
+
+- **Développement** : `DummySmsGateway` - SMS simulés dans les logs
+- **Production** : `TwilioSmsGateway` - SMS réels via Twilio (si configuré)
+
+#### **🚨 Gestion des Erreurs**
+
+- **Non-bloquant** : L'échec d'envoi de SMS de confirmation n'interrompt pas l'opération
+- **Logging complet** : Toutes les tentatives d'envoi sont loggées
+- **Fallback gracieux** : Le système continue de fonctionner même si SMS indisponible
 
 ---
 
@@ -757,7 +968,8 @@ users/tests/
 ├── 📄 test_password_change.py     # Tests de changement de mot de passe
 ├── 📄 test_profile_update.py      # Tests de mise à jour du profil
 ├── 📄 test_phone_change.py        # Tests de changement de numéro
-└── 📄 test_token_management.py    # Tests de gestion des tokens JWT
+├── 📄 test_token_management.py    # Tests de gestion des tokens JWT
+└── 📄 test_token_cleaning.py      # Tests de nettoyage des tokens UUID
 ```
 
 ### **🎯 Tests unitaires avec mocks**
@@ -841,6 +1053,9 @@ MESSAGE_HELP_TEXT = "Message de confirmation"
 
 # Tests du format international
 ./scripts/test.sh specific users/tests/test_international_phone.py
+
+# Tests de nettoyage des tokens
+./scripts/test.sh specific users/tests/test_token_cleaning.py
 ```
 
 ### **📊 Couverture de code cible**

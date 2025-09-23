@@ -84,6 +84,7 @@ Les tests de throttling (`test_throttling.py`) sont automatiquement exclus du mo
 | `test_password_change.py`     | 17    | 100%       | Changement mot de passe |
 | `test_profile_update.py`      | 14    | 100%       | Mise à jour profil      |
 | `test_phone_change.py`        | 18    | 100%       | Changement numéro       |
+| `test_token_cleaning.py`      | 25    | 100%       | Nettoyage tokens UUID   |
 | `test_throttling.py`          | 9     | 100%       | Limites de sécurité     |
 | `test_views.py`               | 12    | 100%       | Endpoints API           |
 | `test_services.py`            | 14    | 100%       | Logique métier          |

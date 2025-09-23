@@ -30,6 +30,7 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, ""),
     DATABASE_URL=(str, "sqlite:///db.sqlite3"),
+    FRONTEND_URL=(str, "https://waterbill.app"),
 )
 
 # Charger .env (UTF-8 attendu)
@@ -50,6 +51,9 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG", default=True)
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+
+# Frontend URL pour les liens de redirection SMS
+FRONTEND_URL = env("FRONTEND_URL")
 
 
 # Application definition
@@ -213,7 +217,8 @@ REST_FRAMEWORK = {
         "login": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "15/minute",
         # Limite élevée pour les tests
         "register": (
-            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/minute"
+            TEST_THROTTLE_RATE if os.getenv(
+                "DJANGO_TEST_MODE") else "10/minute"
         ),
         # Limite élevée pour les tests
         "auth": TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "30/minute",
@@ -221,7 +226,8 @@ REST_FRAMEWORK = {
         "burst": TEST_THROTTLE_SECOND if os.getenv("DJANGO_TEST_MODE") else "50/second",
         # Limite élevée pour les tests
         "activate": (
-            TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "20/minute"
+            TEST_THROTTLE_RATE if os.getenv(
+                "DJANGO_TEST_MODE") else "20/minute"
         ),
         # Limite élevée pour les tests
         "resend_code": (
