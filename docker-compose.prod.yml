@@ -15,6 +15,8 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
       - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      # Frontend URL pour les liens de redirection SMS (obligatoire en production)
+      - FRONTEND_URL=${FRONTEND_URL}
       # Cache Redis pour throttling
       - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
     # Production: pas de volume bind mount
@@ -23,6 +25,6 @@ services:
     restart: always
 
   # En production, pgAdmin est généralement désactivé
-  pgadmin:
-    profiles:
-      - optional
+  # pgadmin:
+  #   profiles:
+  #     - optional

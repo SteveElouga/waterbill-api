@@ -6,17 +6,19 @@ FROM python:3.12-slim AS dependencies
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-# Installer les outils de build
+# Installer les outils de build (optimisé)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     curl \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Créer un environnement virtuel
 RUN python -m venv /opt/venv
@@ -26,11 +28,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt /app/requirements.txt
 COPY requirements-dev.txt /app/requirements-dev.txt
 
-# Installer les dépendances de production
-RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# Installer les dépendances de développement
-RUN pip install -r requirements-dev.txt
+# Installer les dépendances (requirements-dev.txt inclut déjà requirements.txt)
+RUN pip install --upgrade pip \
+    && pip install --no-deps -r requirements-dev.txt \
+    && pip check
 
 # Stage 2: Development - Image de développement
 FROM python:3.12-slim AS development
@@ -42,7 +43,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Installer les dépendances runtime
+# Installer les dépendances runtime (optimisé)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
@@ -50,7 +51,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     libpq5 \
     tzdata \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Copier l'environnement virtuel
 COPY --from=dependencies /opt/venv /opt/venv

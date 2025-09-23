@@ -152,7 +152,8 @@ main() {
             # Nettoyage des logs avant build pour éviter de les copier
             echo -e "${YELLOW}🧹 Nettoyage des logs avant build...${NC}"
             rm -rf logs/ 2>/dev/null || true
-            docker-compose -f docker-compose.yml build --no-cache
+            # Build optimisé avec cache Docker BuildKit
+            DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yml build --parallel
             echo -e "${GREEN}✅ Images reconstruites${NC}"
             ;;
         shell)

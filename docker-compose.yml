@@ -50,6 +50,8 @@ services:
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
       - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      # Frontend URL pour les liens de redirection SMS
+      - FRONTEND_URL=${FRONTEND_URL:-https://waterbill.app}
       # Cache Redis pour throttling
       - CACHE_URL=${CACHE_URL:-redis://redis:6379/1}
     ports:
