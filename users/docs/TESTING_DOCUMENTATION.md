@@ -70,14 +70,15 @@ Les tests de throttling (`test_throttling.py`) sont automatiquement exclus du mo
 
 ### 📈 Statistiques actuelles
 
-- **Total des tests** : 254 tests
+- **Total des tests** : 268 tests
 - **Couverture** : > 95%
-- **Modules testés** : 16 modules
+- **Modules testés** : 18 modules
 - **Fonctionnalités couvertes** : 9 fonctionnalités principales
 
 ### 🏗️ Classes de Base pour Tests
 
 #### **WhitelistTestCase**
+
 Classe de base pour les tests nécessitant la liste blanche des numéros de téléphone.
 
 ```python
@@ -87,19 +88,21 @@ class MonTest(WhitelistTestCase):
     def test_inscription(self):
         # Ajouter automatiquement un numéro à la liste blanche
         self.add_phone_to_whitelist("237670000000", "Numéro de test")
-        
+
         # Le test peut maintenant utiliser ce numéro pour l'inscription
         response = self.client.post("/api/auth/register/", data)
         self.assertEqual(response.status_code, 201)
 ```
 
 **Méthodes disponibles :**
+
 - `add_phone_to_whitelist(phone, notes)` : Ajoute un numéro à la liste blanche
 - `remove_phone_from_whitelist(phone)` : Supprime un numéro de la liste blanche
 - `is_phone_whitelisted(phone)` : Vérifie si un numéro est autorisé
 - `create_test_whitelist()` : Crée une liste blanche de base
 
 #### **WhitelistAPITestCase**
+
 Mixin pour les tests d'API nécessitant la liste blanche.
 
 ```python
@@ -109,38 +112,41 @@ class MonAPITest(APITestCase, WhitelistAPITestCase):
     def setUp(self):
         super().setUp()
         self.setUp_whitelist()  # Configure automatiquement la liste blanche
-        
+
     def test_inscription_api(self):
         self.add_phone_to_whitelist("237670000000")
         # Test d'inscription...
 ```
 
 **Configuration automatique :**
+
 - Création d'un administrateur de test
 - Nettoyage de la liste blanche avant chaque test
 - Méthodes utilitaires pour gérer la liste blanche
 
 ### 🎯 Modules testés
 
-| Module                        | Tests | Couverture | Fonctionnalités         |
-| ----------------------------- | ----- | ---------- | ----------------------- |
-| `test_activation.py`          | 21    | 100%       | Activation SMS, tokens  |
-| `test_password_reset.py`      | 17    | 100%       | Reset mot de passe      |
-| `test_password_change.py`     | 17    | 100%       | Changement mot de passe |
-| `test_profile_update.py`      | 14    | 100%       | Mise à jour profil      |
-| `test_phone_change.py`        | 18    | 100%       | Changement numéro       |
-| `test_token_cleaning.py`      | 25    | 100%       | Nettoyage tokens UUID   |
+| Module                        | Tests | Couverture | Fonctionnalités                    |
+| ----------------------------- | ----- | ---------- | ---------------------------------- |
+| `test_activation.py`          | 21    | 100%       | Activation SMS, tokens             |
+| `test_password_reset.py`      | 17    | 100%       | Reset mot de passe                 |
+| `test_password_change.py`     | 17    | 100%       | Changement mot de passe            |
+| `test_profile_update.py`      | 14    | 100%       | Mise à jour profil                 |
+| `test_phone_change.py`        | 18    | 100%       | Changement numéro                  |
+| `test_token_cleaning.py`      | 25    | 100%       | Nettoyage tokens UUID              |
 | `test_whitelist_base.py`      | 2     | 100%       | Classes de base pour liste blanche |
-| `test_throttling.py`          | 9     | 100%       | Limites de sécurité     |
-| `test_views.py`               | 12    | 100%       | Endpoints API           |
-| `test_services.py`            | 14    | 100%       | Logique métier          |
-| `test_serializers.py`         | 12    | 100%       | Validation données      |
-| `test_models.py`              | 10    | 100%       | Modèles Django          |
-| `test_mocks.py`               | 16    | 100%       | Services externes       |
-| `test_phone_utils.py`         | 33    | 100%       | Utilitaires téléphone   |
-| `test_atomic_registration.py` | 8     | 100%       | Transactions atomiques  |
-| `test_international_phone.py` | 6     | 100%       | Formats internationaux  |
-| `test_token_management.py`    | 21    | 100%       | Gestion JWT             |
+| `test_whitelist_api.py`       | 15    | 100%       | API de gestion liste blanche       |
+| `test_phone_whitelist.py`     | 10    | 100%       | Modèle et validation liste blanche |
+| `test_throttling.py`          | 9     | 100%       | Limites de sécurité                |
+| `test_views.py`               | 12    | 100%       | Endpoints API                      |
+| `test_services.py`            | 14    | 100%       | Logique métier                     |
+| `test_serializers.py`         | 12    | 100%       | Validation données                 |
+| `test_models.py`              | 10    | 100%       | Modèles Django                     |
+| `test_mocks.py`               | 16    | 100%       | Services externes                  |
+| `test_phone_utils.py`         | 33    | 100%       | Utilitaires téléphone              |
+| `test_atomic_registration.py` | 8     | 100%       | Transactions atomiques             |
+| `test_international_phone.py` | 6     | 100%       | Formats internationaux             |
+| `test_token_management.py`    | 21    | 100%       | Gestion JWT                        |
 
 ---
 
@@ -323,16 +329,19 @@ class FeatureTestCase(MockedAPITestCase):
 ### **🐛 Problèmes résolus (2024)**
 
 **Tests échouant après modifications SMS :**
+
 - 5 tests échouaient suite aux changements des services SMS
 - Structure de réponse incorrecte dans les tests de profil
 - Mocks SMS obsolètes
 
 **Tests échouant après implémentation de la liste blanche :**
+
 - 23 tests échouaient à cause de la validation de liste blanche
 - Tests d'inscription avec numéros non autorisés
 - Tests de serializers sans numéros dans la liste blanche
 
 **Tests échouant après correction de l'endpoint logout :**
+
 - 8 tests de logout échouaient après changement d'authentification requise
 - Tests s'attendant à des codes 400 mais recevant 401 Unauthorized
 
@@ -394,11 +403,11 @@ self.assertTrue(result["success"])  # ✅ Validation dans le serializer
 # users/tests/test_whitelist_base.py - Nouvelle classe de base
 class WhitelistTestCase(TestCase):
     """Classe de base pour les tests nécessitant la liste blanche."""
-    
+
     def setUp(self):
         super().setUp()
         self.admin_user = User.objects.create_user(...)
-    
+
     def add_phone_to_whitelist(self, phone: str, notes: str = "Numéro de test") -> PhoneWhitelist:
         """Ajoute un numéro à la liste blanche pour les tests."""
         return PhoneWhitelist.objects.create(
@@ -410,7 +419,7 @@ class WhitelistTestCase(TestCase):
 
 class WhitelistAPITestCase:
     """Mixin pour les tests d'API nécessitant la liste blanche."""
-    
+
     def setUp_whitelist(self):
         """Configuration pour les tests d'API avec liste blanche."""
         # Créer un administrateur et nettoyer la liste blanche
@@ -443,8 +452,8 @@ def test_logout_success(self):
 # Après - Tests corrigés
 def test_logout_success(self):
     response = self.client.post(
-        url, 
-        data, 
+        url,
+        data,
         format="json",
         HTTP_AUTHORIZATION=f"Bearer {self.access_token}"  # ✅ Authentification requise
     )
@@ -453,18 +462,18 @@ def test_logout_success(self):
 
 ### **📊 Résultats des corrections**
 
-| Test | Avant | Après | Statut |
-|------|-------|-------|--------|
-| `test_profile_view_authenticated` | KeyError: 'user' | ✅ Pass | **Corrigé** |
-| `test_request_password_change_success` | send_activation_code not found | ✅ Pass | **Corrigé** |
-| `test_request_password_change_wrong_password` | ValueError not raised | ✅ Pass | **Corrigé** |
-| `test_request_password_reset_existing_user` | send_activation_code not found | ✅ Pass | **Corrigé** |
-| `test_request_phone_change_success` | send_activation_code not found | ✅ Pass | **Corrigé** |
-| **Tests d'inscription (12 tests)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests de serializers (6 tests)** | Validation échoue | ✅ Pass | **Corrigé** |
-| **Tests internationaux (6 tests)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests d'activation (1 test)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests de logout (8 tests)** | 401 - Non authentifié | ✅ Pass | **Corrigé** |
+| Test                                          | Avant                          | Après   | Statut      |
+| --------------------------------------------- | ------------------------------ | ------- | ----------- |
+| `test_profile_view_authenticated`             | KeyError: 'user'               | ✅ Pass | **Corrigé** |
+| `test_request_password_change_success`        | send_activation_code not found | ✅ Pass | **Corrigé** |
+| `test_request_password_change_wrong_password` | ValueError not raised          | ✅ Pass | **Corrigé** |
+| `test_request_password_reset_existing_user`   | send_activation_code not found | ✅ Pass | **Corrigé** |
+| `test_request_phone_change_success`           | send_activation_code not found | ✅ Pass | **Corrigé** |
+| **Tests d'inscription (12 tests)**            | 400 - Non autorisé             | ✅ Pass | **Corrigé** |
+| **Tests de serializers (6 tests)**            | Validation échoue              | ✅ Pass | **Corrigé** |
+| **Tests internationaux (6 tests)**            | 400 - Non autorisé             | ✅ Pass | **Corrigé** |
+| **Tests d'activation (1 test)**               | 400 - Non autorisé             | ✅ Pass | **Corrigé** |
+| **Tests de logout (8 tests)**                 | 401 - Non authentifié          | ✅ Pass | **Corrigé** |
 
 ### **🎯 Impact Global des Corrections**
 

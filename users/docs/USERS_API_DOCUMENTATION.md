@@ -519,6 +519,177 @@ Content-Type: application/json
 
 ---
 
+## 📋 API de Gestion de la Liste Blanche (Administration)
+
+### **🔐 Endpoints réservés aux administrateurs**
+
+L'API de liste blanche permet aux administrateurs de gérer les numéros de téléphone autorisés à créer un compte sur la plateforme.
+
+| Méthode  | Endpoint                   | Authentification | Throttling        | Description            |
+| -------- | -------------------------- | ---------------- | ----------------- | ---------------------- |
+| `GET`    | `/admin/whitelist/`        | ✅ Admin JWT     | AdminRateThrottle | Liste tous les numéros |
+| `POST`   | `/admin/whitelist/add/`    | ✅ Admin JWT     | AdminRateThrottle | Ajouter un numéro      |
+| `POST`   | `/admin/whitelist/check/`  | ✅ Admin JWT     | AdminRateThrottle | Vérifier un numéro     |
+| `DELETE` | `/admin/whitelist/remove/` | ✅ Admin JWT     | AdminRateThrottle | Supprimer un numéro    |
+
+### **📝 Documentation détaillée des endpoints d'administration**
+
+#### **1. 📋 Lister les numéros - GET /api/auth/admin/whitelist/**
+
+**Description :** Récupère la liste complète des numéros autorisés avec statistiques.
+
+**Headers :**
+
+```http
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+```
+
+**Réponse (200 OK) :**
+
+```json
+{
+  "status": "success",
+  "message": "Liste blanche récupérée avec succès",
+  "data": {
+    "whitelist": [
+      {
+        "id": 1,
+        "phone": "+237670000000",
+        "added_by_display": "Admin User",
+        "added_by_phone": "+237670000999",
+        "added_at": "2024-09-24T08:00:00Z",
+        "notes": "Client VIP",
+        "is_active": true
+      }
+    ],
+    "statistics": {
+      "total_count": 1,
+      "active_count": 1,
+      "inactive_count": 0
+    }
+  }
+}
+```
+
+#### **2. ➕ Ajouter un numéro - POST /api/auth/admin/whitelist/add/**
+
+**Description :** Ajoute un nouveau numéro à la liste blanche.
+
+**Payload :**
+
+```json
+{
+  "phone": "+237670000000",
+  "notes": "Client VIP",
+  "is_active": true
+}
+```
+
+**Réponse (201 Created) :**
+
+```json
+{
+  "status": "success",
+  "message": "Numéro ajouté à la liste blanche avec succès",
+  "data": {
+    "whitelist_item": {
+      "id": 1,
+      "phone": "+237670000000",
+      "added_by_display": "Admin User",
+      "added_by_phone": "+237670000999",
+      "added_at": "2024-09-24T08:00:00Z",
+      "notes": "Client VIP",
+      "is_active": true
+    }
+  }
+}
+```
+
+#### **3. 🔍 Vérifier un numéro - POST /api/auth/admin/whitelist/check/**
+
+**Description :** Vérifie si un numéro est autorisé à créer un compte.
+
+**Payload :**
+
+```json
+{
+  "phone": "+237670000000"
+}
+```
+
+**Réponse (200 OK) :**
+
+```json
+{
+  "status": "success",
+  "message": "Numéro autorisé",
+  "data": {
+    "is_authorized": true,
+    "whitelist_details": {
+      "id": 1,
+      "phone": "+237670000000",
+      "added_by_display": "Admin User",
+      "added_at": "2024-09-24T08:00:00Z",
+      "notes": "Client VIP",
+      "is_active": true
+    }
+  }
+}
+```
+
+#### **4. 🗑️ Supprimer un numéro - DELETE /api/auth/admin/whitelist/remove/**
+
+**Description :** Supprime un numéro de la liste blanche.
+
+**Payload :**
+
+```json
+{
+  "phone": "+237670000000"
+}
+```
+
+**Réponse (200 OK) :**
+
+```json
+{
+  "status": "success",
+  "message": "Numéro supprimé de la liste blanche avec succès",
+  "data": {
+    "removed_phone": "+237670000000"
+  }
+}
+```
+
+### **🛡️ Sécurité de l'API d'administration**
+
+- **Permissions** : `IsAdminUser` uniquement
+- **Throttling** : 1000 requêtes/heure par admin
+- **Validation** : Normalisation automatique des numéros
+- **Audit** : Traçabilité des modifications (qui a ajouté quoi et quand)
+
+### **🔧 Commandes CLI de gestion**
+
+```bash
+# Initialiser la liste blanche avec des numéros de test
+python manage.py init_whitelist
+
+# Ajouter un numéro à la liste blanche
+python manage.py whitelist_phone add +237670000000 "Client VIP"
+
+# Vérifier si un numéro est autorisé
+python manage.py whitelist_phone check +237670000000
+
+# Lister tous les numéros autorisés
+python manage.py whitelist_phone list
+
+# Supprimer un numéro de la liste blanche
+python manage.py whitelist_phone remove +237670000000
+```
+
+---
+
 ## 🛡️ Sécurité et Throttling
 
 ### **🚨 Système de throttling multi-niveaux**
@@ -1483,12 +1654,14 @@ check_api_health()
 ### **🐛 Problèmes résolus**
 
 **Erreurs Swagger :**
+
 - `"😱 Could not render OperationContainer"` dans l'interface Swagger
 - Configuration incorrecte de la sécurité OpenAPI 3.0
 - Serializers incompatibles avec DRF Spectacular
 - **Endpoint logout incorrectement configuré** : Nécessite maintenant une authentification
 
 **Tests échouant :**
+
 - 5 tests échouaient après les modifications des services SMS
 - Structure de réponse incorrecte dans `profile_view`
 - Mocks SMS obsolètes
@@ -1566,15 +1739,15 @@ class ProfileDataSerializer(serializers.Serializer):
 ```python
 class MockSmsGateway:
     """Mock SMS avec nouvelles méthodes."""
-    
+
     def send_activation_code(self, phone: str, code: str) -> bool:
         """Méthode originale conservée."""
         pass
-    
+
     def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
         """Nouvelle méthode pour codes avec redirection."""
         pass
-    
+
     def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
         """Nouvelle méthode pour messages de confirmation."""
         pass
@@ -1589,22 +1762,22 @@ def test_request_password_change_success(self):
         mock_sms = MagicMock()
         mock_sms.send_verification_code.return_value = True  # ✅ Nouvelle méthode
         mock_gateway.return_value = mock_sms
-        
+
         result = PasswordChangeService.request_password_change(self.user, "oldpassword123")
-        
+
         # Vérification mise à jour
         mock_sms.send_verification_code.assert_called_once()  # ✅ Correct
 ```
 
 ### **📊 Résultats des corrections**
 
-| Composant | Avant | Après | Statut |
-|-----------|-------|-------|--------|
-| **Interface Swagger** | Erreurs de rendu | Fonctionnelle | ✅ |
-| **Schéma OpenAPI** | Invalide | Valide | ✅ |
-| **Tests unitaires** | 5 échecs | Tous passent | ✅ |
-| **Mocks SMS** | Méthodes obsolètes | À jour | ✅ |
-| **Serializers** | Incompatibles | Compatibles | ✅ |
+| Composant             | Avant              | Après         | Statut |
+| --------------------- | ------------------ | ------------- | ------ |
+| **Interface Swagger** | Erreurs de rendu   | Fonctionnelle | ✅     |
+| **Schéma OpenAPI**    | Invalide           | Valide        | ✅     |
+| **Tests unitaires**   | 5 échecs           | Tous passent  | ✅     |
+| **Mocks SMS**         | Méthodes obsolètes | À jour        | ✅     |
+| **Serializers**       | Incompatibles      | Compatibles   | ✅     |
 
 ### **🧪 Validation des corrections**
 
@@ -1637,30 +1810,30 @@ Système de contrôle d'accès strict qui limite la création de comptes aux num
 class PhoneWhitelist(models.Model):
     """
     Modèle pour gérer la liste blanche des numéros de téléphone autorisés.
-    
+
     Seuls les numéros présents dans cette liste peuvent créer un compte utilisateur.
     Géré exclusivement par les administrateurs.
     """
-    
+
     phone = models.CharField(
         max_length=15,
         unique=True,
         help_text="Numéro de téléphone autorisé (format international)")
-    
+
     added_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="whitelisted_phones",
         help_text="Administrateur qui a ajouté ce numéro")
-    
+
     added_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Date d'ajout du numéro")
-    
+
     notes = models.TextField(
         blank=True,
         help_text="Notes optionnelles sur ce numéro")
-    
+
     is_active = models.BooleanField(
         default=True,
         help_text="Si False, ce numéro ne peut plus créer de compte")
@@ -1674,8 +1847,8 @@ PhoneWhitelist.is_phone_authorized("+237670000000")  # True/False
 
 # Ajouter un numéro à la liste blanche
 PhoneWhitelist.authorize_phone(
-    "+237670000000", 
-    admin_user, 
+    "+237670000000",
+    admin_user,
     "Client VIP"
 )
 ```
@@ -1688,7 +1861,7 @@ PhoneWhitelist.authorize_phone(
 def validate_phone(self, value: str) -> str:
     """Validation avec vérification de la liste blanche."""
     # ... validation normale ...
-    
+
     # Vérifier si le numéro est dans la liste blanche
     from .models import PhoneWhitelist
     if not PhoneWhitelist.is_phone_authorized(international_phone):
@@ -1696,7 +1869,7 @@ def validate_phone(self, value: str) -> str:
             "Votre numéro de téléphone n'est pas autorisé à créer un compte sur cette plateforme. "
             "Veuillez contacter le service client pour obtenir l'autorisation."
         )
-    
+
     return international_phone
 ```
 
@@ -1709,24 +1882,25 @@ def validate_phone(self, value: str) -> str:
 class PhoneWhitelistAdmin(admin.ModelAdmin):
     """
     Interface d'administration pour la liste blanche des numéros de téléphone.
-    
+
     Permet aux administrateurs de gérer les numéros autorisés à créer un compte.
     """
-    
+
     list_display = [
         "phone",
         "added_by_display",
-        "added_at", 
+        "added_at",
         "is_active",
         "notes_preview"
     ]
-    
+
     list_filter = ["is_active", "added_at", "added_by"]
-    
+
     search_fields = ["phone", "notes", "added_by__phone", "added_by__first_name"]
 ```
 
 **Fonctionnalités :**
+
 - **Gestion complète** : Ajout, modification, suppression
 - **Historique** : Qui a ajouté quel numéro et quand
 - **Recherche** : Par numéro, notes, ou administrateur
@@ -1791,24 +1965,26 @@ class PhoneWhitelistModelTestCase(TestCase):
 #### **🔧 Corrections Récentes des Tests**
 
 **Tests échouant après implémentation de la liste blanche :**
+
 - 23 tests échouaient à cause de la validation de liste blanche
 - **Solution** : Classes de base `WhitelistTestCase` et `WhitelistAPITestCase`
 - **Résultat** : 100% de réduction des échecs
 
 **Tests échouant après correction de l'endpoint logout :**
+
 - 8 tests de logout échouaient après changement d'authentification requise
 - **Solution** : Ajout de l'authentification dans les tests de logout
 - **Résultat** : Tous les tests de logout passent
 
 #### **📊 Résultats des corrections**
 
-| Test | Avant | Après | Statut |
-|------|-------|-------|--------|
-| **Tests d'inscription (12 tests)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests de serializers (6 tests)** | Validation échoue | ✅ Pass | **Corrigé** |
-| **Tests internationaux (6 tests)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests d'activation (1 test)** | 400 - Non autorisé | ✅ Pass | **Corrigé** |
-| **Tests de logout (8 tests)** | 401 - Non authentifié | ✅ Pass | **Corrigé** |
+| Test                               | Avant                 | Après   | Statut      |
+| ---------------------------------- | --------------------- | ------- | ----------- |
+| **Tests d'inscription (12 tests)** | 400 - Non autorisé    | ✅ Pass | **Corrigé** |
+| **Tests de serializers (6 tests)** | Validation échoue     | ✅ Pass | **Corrigé** |
+| **Tests internationaux (6 tests)** | 400 - Non autorisé    | ✅ Pass | **Corrigé** |
+| **Tests d'activation (1 test)**    | 400 - Non autorisé    | ✅ Pass | **Corrigé** |
+| **Tests de logout (8 tests)**      | 401 - Non authentifié | ✅ Pass | **Corrigé** |
 
 #### **🎯 Impact Global des Corrections**
 
@@ -1844,7 +2020,7 @@ class PhoneWhitelistAPITestCase(APITestCase):
             added_by=self.admin_user,
             is_active=True
         )
-        
+
         register_data = {
             "phone": "237670000001",
             "first_name": "John",
@@ -1852,7 +2028,7 @@ class PhoneWhitelistAPITestCase(APITestCase):
             "password": "testpassword123",
             "password_confirm": "testpassword123",
         }
-        
+
         response = self.client.post("/api/auth/register/", register_data)
         self.assertEqual(response.status_code, 201)
 
@@ -1865,7 +2041,7 @@ class PhoneWhitelistAPITestCase(APITestCase):
             "password": "testpassword123",
             "password_confirm": "testpassword123",
         }
-        
+
         response = self.client.post("/api/auth/register/", register_data)
         self.assertEqual(response.status_code, 400)
         self.assertIn("pas autorisé", str(response.data["data"]["phone"]))
@@ -1909,11 +2085,13 @@ python manage.py init_whitelist
 ### **💡 Bonnes pratiques**
 
 1. **Sécurité** :
+
    - Toujours utiliser des numéros au format international
    - Ajouter des notes explicatives pour chaque numéro
    - Désactiver plutôt que supprimer les numéros
 
 2. **Gestion** :
+
    - Utiliser l'interface d'administration pour les opérations courantes
    - Utiliser les commandes CLI pour les opérations en masse
    - Maintenir un historique des modifications

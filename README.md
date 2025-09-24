@@ -2655,6 +2655,28 @@ python manage.py shell
 python manage.py collectstatic
 ```
 
+### 📋 Gestion de la Liste Blanche des Numéros
+
+```bash
+# Initialiser la liste blanche avec des numéros de test
+python manage.py init_whitelist
+
+# Ajouter un numéro à la liste blanche
+python manage.py whitelist_phone add +237670000000 "Client VIP"
+
+# Vérifier si un numéro est autorisé
+python manage.py whitelist_phone check +237670000000
+
+# Lister tous les numéros autorisés
+python manage.py whitelist_phone list
+
+# Supprimer un numéro de la liste blanche
+python manage.py whitelist_phone remove +237670000000
+
+# Forcer la réactivation des numéros existants
+python manage.py init_whitelist --force
+```
+
 ### 🧪 Tests et qualité
 
 ```bash
