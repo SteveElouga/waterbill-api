@@ -2,7 +2,6 @@
 Tests pour l'API de gestion de la liste blanche des numéros de téléphone.
 """
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -47,24 +46,21 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
             phone=self.test_phone1,
             added_by=self.admin_user,
             notes="Numéro de test 1",
-            is_active=True
+            is_active=True,
         )
 
         PhoneWhitelist.objects.create(
             phone=self.test_phone2,
             added_by=self.admin_user,
             notes="Numéro de test 2",
-            is_active=False
+            is_active=False,
         )
 
     def test_whitelist_list_view_success(self):
         """Test de récupération de la liste blanche avec succès."""
         url = "/api/auth/admin/whitelist/"
 
-        response = self.client.get(
-            url,
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
-        )
+        response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -102,10 +98,7 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
 
         url = "/api/auth/admin/whitelist/"
 
-        response = self.client.get(
-            url,
-            HTTP_AUTHORIZATION=f"Bearer {normal_token}"
-        )
+        response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {normal_token}")
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -117,14 +110,11 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         data = {
             "phone": new_phone,
             "notes": "Nouveau numéro de test",
-            "is_active": True
+            "is_active": True,
         }
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -135,8 +125,7 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         self.assertIn("whitelist_item", response_data["data"])
 
         # Vérifier que le numéro a été ajouté en base
-        self.assertTrue(PhoneWhitelist.objects.filter(
-            phone=new_phone).exists())
+        self.assertTrue(PhoneWhitelist.objects.filter(phone=new_phone).exists())
 
     def test_whitelist_add_view_duplicate_phone(self):
         """Test d'ajout d'un numéro déjà présent dans la liste blanche."""
@@ -145,22 +134,18 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         data = {
             "phone": self.test_phone1,  # Déjà présent
             "notes": "Tentative de doublon",
-            "is_active": True
+            "is_active": True,
         }
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_data = response.json()
 
         self.assertEqual(response_data["status"], "error")
-        self.assertIn("déjà dans la liste blanche",
-                      str(response_data["data"]["phone"]))
+        self.assertIn("déjà dans la liste blanche", str(response_data["data"]["phone"]))
 
     def test_whitelist_add_view_invalid_phone(self):
         """Test d'ajout d'un numéro invalide."""
@@ -169,14 +154,11 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         data = {
             "phone": "",  # Numéro vide
             "notes": "Numéro invalide",
-            "is_active": True
+            "is_active": True,
         }
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -189,15 +171,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de vérification d'un numéro autorisé."""
         url = "/api/auth/admin/whitelist/check/"
 
-        data = {
-            "phone": self.test_phone1  # Numéro autorisé et actif
-        }
+        data = {"phone": self.test_phone1}  # Numéro autorisé et actif
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -212,15 +189,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de vérification d'un numéro inactif."""
         url = "/api/auth/admin/whitelist/check/"
 
-        data = {
-            "phone": self.test_phone2  # Numéro inactif
-        }
+        data = {"phone": self.test_phone2}  # Numéro inactif
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -234,15 +206,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de vérification d'un numéro non autorisé."""
         url = "/api/auth/admin/whitelist/check/"
 
-        data = {
-            "phone": "+237670000999"  # Numéro non dans la liste blanche
-        }
+        data = {"phone": "+237670000999"}  # Numéro non dans la liste blanche
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -256,15 +223,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de vérification d'un numéro invalide."""
         url = "/api/auth/admin/whitelist/check/"
 
-        data = {
-            "phone": ""  # Numéro vide
-        }
+        data = {"phone": ""}  # Numéro vide
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -277,15 +239,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de suppression d'un numéro de la liste blanche avec succès."""
         url = "/api/auth/admin/whitelist/remove/"
 
-        data = {
-            "phone": self.test_phone1  # Numéro à supprimer
-        }
+        data = {"phone": self.test_phone1}  # Numéro à supprimer
 
         response = self.client.delete(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -296,22 +253,16 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         self.assertTrue(response_data["data"]["removed"])
 
         # Vérifier que le numéro a été supprimé de la base
-        self.assertFalse(PhoneWhitelist.objects.filter(
-            phone=self.test_phone1).exists())
+        self.assertFalse(PhoneWhitelist.objects.filter(phone=self.test_phone1).exists())
 
     def test_whitelist_remove_view_not_found(self):
         """Test de suppression d'un numéro non trouvé."""
         url = "/api/auth/admin/whitelist/remove/"
 
-        data = {
-            "phone": "+237670000999"  # Numéro non dans la liste blanche
-        }
+        data = {"phone": "+237670000999"}  # Numéro non dans la liste blanche
 
         response = self.client.delete(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -324,15 +275,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de suppression avec un numéro invalide."""
         url = "/api/auth/admin/whitelist/remove/"
 
-        data = {
-            "phone": ""  # Numéro vide
-        }
+        data = {"phone": ""}  # Numéro vide
 
         response = self.client.delete(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -356,14 +302,14 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
             data = {
                 "phone": phone,
                 "notes": f"Test normalisation {i}",
-                "is_active": True
+                "is_active": True,
             }
 
             response = self.client.post(
                 url,
                 data,
                 format="json",
-                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             )
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -386,8 +332,7 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
 
         # Première requête devrait passer
         response1 = self.client.get(
-            url,
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
 
@@ -402,44 +347,40 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         url = "/api/auth/admin/whitelist/"
 
         # Mock pour provoquer une exception
-        with patch('users.models.PhoneWhitelist.objects.select_related') as mock_query:
+        with patch("users.models.PhoneWhitelist.objects.select_related") as mock_query:
             mock_query.side_effect = Exception("Database error")
 
             response = self.client.get(
-                url,
-                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+                url, HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
             )
 
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
             response_data = response.json()
             self.assertEqual(response_data["status"], "error")
-            self.assertIn("Erreur lors de la récupération",
-                          response_data["message"])
+            self.assertIn("Erreur lors de la récupération", response_data["message"])
 
     def test_whitelist_add_view_exception_handling(self):
         """Test de gestion d'exception dans la vue d'ajout."""
         url = "/api/auth/admin/whitelist/add/"
 
-        data = {
-            "phone": "+237670000999",
-            "notes": "Test exception",
-            "is_active": True
-        }
+        data = {"phone": "+237670000999", "notes": "Test exception", "is_active": True}
 
         # Mock pour provoquer une exception lors de la création
-        with patch('users.models.PhoneWhitelist.objects.create') as mock_create:
+        with patch("users.models.PhoneWhitelist.objects.create") as mock_create:
             mock_create.side_effect = Exception("Database constraint error")
 
             response = self.client.post(
                 url,
                 data,
                 format="json",
-                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             )
 
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
             response_data = response.json()
             self.assertEqual(response_data["status"], "error")
             self.assertIn("Erreur lors de l'ajout", response_data["message"])
@@ -448,29 +389,28 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         """Test de gestion d'exception dans la vue de vérification."""
         url = "/api/auth/admin/whitelist/check/"
 
-        data = {
-            "phone": "+237670000999"
-        }
+        data = {"phone": "+237670000999"}
 
         # Mock pour provoquer une exception dans le serializer
-        with patch('users.views_whitelist.PhoneWhitelistCheckSerializer') as mock_serializer_class:
+        with patch(
+            "users.views_whitelist.PhoneWhitelistCheckSerializer"
+        ) as mock_serializer_class:
             mock_serializer = mock_serializer_class.return_value
-            mock_serializer.is_valid.side_effect = Exception(
-                "Serializer error")
+            mock_serializer.is_valid.side_effect = Exception("Serializer error")
 
             response = self.client.post(
                 url,
                 data,
                 format="json",
-                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             )
 
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
             response_data = response.json()
             self.assertEqual(response_data["status"], "error")
-            self.assertIn("Erreur lors de la vérification",
-                          response_data["message"])
+            self.assertIn("Erreur lors de la vérification", response_data["message"])
 
     def test_whitelist_remove_view_exception_handling(self):
         """Test de gestion d'exception dans la vue de suppression."""
@@ -481,24 +421,25 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         data = {"phone": "+237670000999"}
 
         # Mock pour provoquer une exception dans le serializer
-        with patch('users.views_whitelist.PhoneWhitelistCheckSerializer') as mock_serializer_class:
+        with patch(
+            "users.views_whitelist.PhoneWhitelistCheckSerializer"
+        ) as mock_serializer_class:
             mock_serializer = mock_serializer_class.return_value
-            mock_serializer.is_valid.side_effect = Exception(
-                "Serializer error")
+            mock_serializer.is_valid.side_effect = Exception("Serializer error")
 
             response = self.client.delete(
                 url,
                 data,
                 format="json",
-                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}",
             )
 
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(
+                response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
             response_data = response.json()
             self.assertEqual(response_data["status"], "error")
-            self.assertIn("Erreur lors de la suppression",
-                          response_data["message"])
+            self.assertIn("Erreur lors de la suppression", response_data["message"])
 
     def test_whitelist_add_view_serializer_validation_error(self):
         """Test de validation d'erreur du serializer dans la vue d'ajout."""
@@ -508,14 +449,11 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         data = {
             "phone": "invalid_phone",  # Format invalide
             "notes": "x" * 1000,  # Trop long
-            "is_active": "invalid_boolean"  # Type invalide
+            "is_active": "invalid_boolean",  # Type invalide
         }
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -530,15 +468,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         url = "/api/auth/admin/whitelist/check/"
 
         # Données invalides
-        data = {
-            "phone": ""  # Numéro vide
-        }
+        data = {"phone": ""}  # Numéro vide
 
         response = self.client.post(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -552,15 +485,10 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         url = "/api/auth/admin/whitelist/remove/"
 
         # Données invalides
-        data = {
-            "phone": ""  # Numéro vide
-        }
+        data = {"phone": ""}  # Numéro vide
 
         response = self.client.delete(
-            url,
-            data,
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

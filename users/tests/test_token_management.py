@@ -119,10 +119,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -139,10 +136,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -158,10 +152,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -175,10 +166,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -191,10 +179,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -210,10 +195,7 @@ class TestLogout:
 
         # Authentifier avec l'access token
         response = self.client.post(
-            url, 
-            data, 
-            format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            url, data, format="json", HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -234,10 +216,10 @@ class TestLogout:
 
         # Authentifier avec l'access token pour logout
         logout_response = self.client.post(
-            logout_url, 
-            logout_data, 
+            logout_url,
+            logout_data,
             format="json",
-            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
         )
         assert logout_response.status_code == status.HTTP_200_OK
 
@@ -309,10 +291,10 @@ class TestTokenManagementIntegration:
 
         # Authentifier avec l'access token pour logout
         logout_response = self.client.post(
-            logout_url, 
-            logout_data, 
+            logout_url,
+            logout_data,
             format="json",
-            HTTP_AUTHORIZATION=f"Bearer {new_access_token}"
+            HTTP_AUTHORIZATION=f"Bearer {new_access_token}",
         )
         assert logout_response.status_code == status.HTTP_200_OK
 
@@ -346,10 +328,10 @@ class TestTokenManagementIntegration:
         # Utiliser l'access token du premier refresh pour l'authentification
         access_token1 = refresh_response1.data["access"]
         logout_response = self.client.post(
-            logout_url, 
-            logout_data, 
+            logout_url,
+            logout_data,
             format="json",
-            HTTP_AUTHORIZATION=f"Bearer {access_token1}"
+            HTTP_AUTHORIZATION=f"Bearer {access_token1}",
         )
         assert logout_response.status_code == status.HTTP_200_OK
 

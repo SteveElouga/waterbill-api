@@ -11,16 +11,16 @@ def create_env_file():
     """Crée le fichier .env à partir de env.example"""
 
     # Vérifier si .env existe déjà
-    if os.path.exists('.env'):
+    if os.path.exists(".env"):
         print("⚠️  Le fichier .env existe déjà.")
         response = input("Voulez-vous le remplacer? (y/N): ")
-        if response.lower() != 'y':
+        if response.lower() != "y":
             print("❌ Annulé.")
             return
 
     # Copier env.example vers .env
     try:
-        shutil.copy('env.example', '.env')
+        shutil.copy("env.example", ".env")
         print("✅ Fichier .env créé avec succès!")
         print("📝 N'oubliez pas de personnaliser les valeurs dans .env")
         print("🔒 Le fichier .env est dans .gitignore pour des raisons de sécurité")

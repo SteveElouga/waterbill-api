@@ -54,7 +54,9 @@ class MockSmsGateway:
 
         return True
 
-    def send_verification_code(self, phone: str, code: str, operation_type: str, redirect_url: str = None) -> bool:
+    def send_verification_code(
+        self, phone: str, code: str, operation_type: str, redirect_url: str = None
+    ) -> bool:
         """
         Simule l'envoi d'un code de vérification avec lien de redirection.
 
@@ -85,7 +87,9 @@ class MockSmsGateway:
 
         return True
 
-    def send_confirmation_message(self, phone: str, operation_type: str, details: str = None) -> bool:
+    def send_confirmation_message(
+        self, phone: str, operation_type: str, details: str = None
+    ) -> bool:
         """
         Simule l'envoi d'un message de confirmation.
 

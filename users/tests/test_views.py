@@ -36,8 +36,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
             "apartment_name": "A1",
         }
 
-        self.login_data = {"phone": "237658552295",
-                           "password": "testpassword123"}
+        self.login_data = {"phone": "237658552295", "password": "testpassword123"}
 
         self.existing_user = User.objects.create_user(
             phone="237658552295",  # Numéro différent pour éviter les conflits
@@ -60,11 +59,13 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
         """Test d'inscription réussie."""
         # Nettoyer le cache avant le test
         from django.core.cache import cache
+
         cache.clear()
 
         # Ajouter le numéro à la liste blanche
         self.add_phone_to_whitelist(
-            self.register_data["phone"], "Numéro de test d'inscription")
+            self.register_data["phone"], "Numéro de test d'inscription"
+        )
 
         url = reverse("users:register")
         response = self.client.post(url, self.register_data, format="json")
@@ -84,8 +85,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(
-            self.mock_sms.sent_messages[0]["phone"], "+237658552294")
+        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+237658552294")
 
         # Note: Les tokens ne sont pas générés lors de l'inscription
         # Ils sont générés seulement lors de la connexion
@@ -217,8 +217,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
         """Test de récupération du profil avec authentification."""
         # Obtenir un token d'authentification
         login_url = reverse("users:login")
-        login_response = self.client.post(
-            login_url, self.login_data, format="json")
+        login_response = self.client.post(login_url, self.login_data, format="json")
         access_token = login_response.json()["data"]["tokens"]["access"]
 
         # Accéder au profil avec le token
@@ -250,12 +249,12 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
         """Test du nettoyage du numéro de téléphone dans les vues."""
         # Nettoyer le cache avant le test
         from django.core.cache import cache
+
         cache.clear()
 
         # Ajouter le numéro à la liste blanche (format nettoyé)
         test_phone = "237 67 00 002"
-        self.add_phone_to_whitelist(
-            test_phone, "Numéro de test pour nettoyage")
+        self.add_phone_to_whitelist(test_phone, "Numéro de test pour nettoyage")
 
         # Test avec numéro formaté pour l'inscription
         url = reverse("users:register")
@@ -273,8 +272,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
 
         # Vérifier que le SMS a été envoyé
         self.assertEqual(len(self.mock_sms.sent_messages), 1)
-        self.assertEqual(
-            self.mock_sms.sent_messages[0]["phone"], "+2376700002")
+        self.assertEqual(self.mock_sms.sent_messages[0]["phone"], "+2376700002")
 
         # Test avec numéro formaté pour la connexion
         login_url = reverse("users:login")
@@ -286,8 +284,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
         response = self.client.post(login_url, login_data, format="json")
         # Accepter 200 (succès) ou 400 (erreur de connexion)
         self.assertIn(
-            response.status_code, [
-                status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
         )
 
     def test_apartment_name_validation(self) -> None:
@@ -316,8 +313,7 @@ class AuthenticationViewsTestCase(MockedAPITestCase, WhitelistAPITestCase):
 
         # Accepter 201 (succès) ou 400 (erreur SMS Twilio)
         self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
+            response.status_code, [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
         )
 
         if response.status_code == status.HTTP_201_CREATED:

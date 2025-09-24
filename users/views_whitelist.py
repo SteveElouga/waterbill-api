@@ -49,8 +49,9 @@ def phone_whitelist_list_view(request: Request) -> Response:
     try:
         from .models import PhoneWhitelist
 
-        whitelist_items = PhoneWhitelist.objects.select_related(
-            "added_by").order_by("-added_at")
+        whitelist_items = PhoneWhitelist.objects.select_related("added_by").order_by(
+            "-added_at"
+        )
         serializer = PhoneWhitelistSerializer(whitelist_items, many=True)
 
         return Response(
@@ -59,8 +60,10 @@ def phone_whitelist_list_view(request: Request) -> Response:
                 data={
                     "whitelist": serializer.data,
                     "total_count": len(serializer.data),
-                    "active_count": len([item for item in serializer.data if item["is_active"]]),
-                }
+                    "active_count": len(
+                        [item for item in serializer.data if item["is_active"]]
+                    ),
+                },
             ),
             status=status.HTTP_200_OK,
         )
@@ -193,7 +196,8 @@ def phone_whitelist_check_view(request: Request) -> Response:
 
         if whitelist_item:
             response_data["whitelist_details"] = PhoneWhitelistSerializer(
-                whitelist_item).data
+                whitelist_item
+            ).data
 
         status_text = "autorisé" if is_authorized else "non autorisé"
 

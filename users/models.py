@@ -30,8 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text="Numéro de téléphone unique (ex: +237670000000)",
     )
-    first_name = models.CharField(
-        max_length=150, help_text="Prénom de l'utilisateur")
+    first_name = models.CharField(max_length=150, help_text="Prénom de l'utilisateur")
     last_name = models.CharField(
         max_length=150, help_text="Nom de famille de l'utilisateur"
     )
@@ -146,8 +145,7 @@ class VerificationToken(models.Model):
     )
 
     # Code SMS hashé
-    code_hash = models.CharField(
-        max_length=64, help_text="Hash SHA256 du code SMS")
+    code_hash = models.CharField(max_length=64, help_text="Hash SHA256 du code SMS")
 
     # Expiration
     expires_at = models.DateTimeField(
@@ -171,8 +169,7 @@ class VerificationToken(models.Model):
     is_locked = models.BooleanField(
         default=False, help_text="Token verrouillé après 5 tentatives échouées"
     )
-    is_used = models.BooleanField(
-        default=False, help_text="Token utilisé (one-shot)")
+    is_used = models.BooleanField(default=False, help_text="Token utilisé (one-shot)")
 
     # Métadonnées
     created_at = models.DateTimeField(
@@ -574,25 +571,25 @@ class PhoneWhitelist(models.Model):
     phone = models.CharField(
         max_length=15,
         unique=True,
-        help_text="Numéro de téléphone autorisé (format international)")
+        help_text="Numéro de téléphone autorisé (format international)",
+    )
 
     added_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="whitelisted_phones",
-        help_text="Administrateur qui a ajouté ce numéro")
+        help_text="Administrateur qui a ajouté ce numéro",
+    )
 
     added_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Date d'ajout du numéro")
+        auto_now_add=True, help_text="Date d'ajout du numéro"
+    )
 
-    notes = models.TextField(
-        blank=True,
-        help_text="Notes optionnelles sur ce numéro")
+    notes = models.TextField(blank=True, help_text="Notes optionnelles sur ce numéro")
 
     is_active = models.BooleanField(
-        default=True,
-        help_text="Si False, ce numéro ne peut plus créer de compte")
+        default=True, help_text="Si False, ce numéro ne peut plus créer de compte"
+    )
 
     class Meta:
         verbose_name = "Numéro autorisé"
@@ -614,15 +611,14 @@ class PhoneWhitelist(models.Model):
             bool: True si le numéro est autorisé, False sinon
         """
         try:
-            return cls.objects.filter(
-                phone=phone,
-                is_active=True
-            ).exists()
+            return cls.objects.filter(phone=phone, is_active=True).exists()
         except Exception:
             return False
 
     @classmethod
-    def authorize_phone(cls, phone: str, added_by: User, notes: str = "") -> "PhoneWhitelist":
+    def authorize_phone(
+        cls, phone: str, added_by: User, notes: str = ""
+    ) -> "PhoneWhitelist":
         """
         Ajoute un numéro de téléphone à la liste blanche.
 
@@ -636,10 +632,6 @@ class PhoneWhitelist(models.Model):
         """
         whitelist_item, created = cls.objects.get_or_create(
             phone=phone,
-            defaults={
-                "added_by": added_by,
-                "notes": notes,
-                "is_active": True
-            }
+            defaults={"added_by": added_by, "notes": notes, "is_active": True},
         )
         return whitelist_item

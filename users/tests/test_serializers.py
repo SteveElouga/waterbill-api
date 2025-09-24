@@ -38,7 +38,8 @@ class RegisterSerializerTestCase(MockedTestCase, WhitelistTestCase):
         """Test avec des données d'inscription valides."""
         # Ajouter le numéro à la liste blanche
         self.add_phone_to_whitelist(
-            self.valid_data["phone"], "Numéro de test serializer")
+            self.valid_data["phone"], "Numéro de test serializer"
+        )
 
         serializer = RegisterSerializer(data=self.valid_data)
         self.assertTrue(serializer.is_valid())
@@ -78,8 +79,7 @@ class RegisterSerializerTestCase(MockedTestCase, WhitelistTestCase):
     def test_password_confirmation_mismatch(self) -> None:
         """Test de non-correspondance des mots de passe."""
         # Ajouter le numéro à la liste blanche
-        self.add_phone_to_whitelist(
-            self.valid_data["phone"], "Numéro de test mismatch")
+        self.add_phone_to_whitelist(self.valid_data["phone"], "Numéro de test mismatch")
 
         data = self.valid_data.copy()
         data["password_confirm"] = "differentpassword"

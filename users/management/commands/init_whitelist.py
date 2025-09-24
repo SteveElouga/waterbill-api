@@ -19,7 +19,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--force",
             action="store_true",
-            help="Force l'initialisation même si des numéros existent déjà"
+            help="Force l'initialisation même si des numéros existent déjà",
         )
 
     def handle(self, *args, **options):
@@ -28,7 +28,8 @@ class Command(BaseCommand):
         test_phones = self._get_test_phones()
 
         added_count, skipped_count = self._process_phones(
-            test_phones, admin_user, force)
+            test_phones, admin_user, force
+        )
         self._display_summary(added_count, skipped_count)
 
     def _get_admin_user(self):
@@ -57,13 +58,11 @@ class Command(BaseCommand):
 
         for phone in test_phones:
             try:
-                added, skipped = self._process_single_phone(
-                    phone, admin_user, force)
+                added, skipped = self._process_single_phone(phone, admin_user, force)
                 added_count += added
                 skipped_count += skipped
             except Exception as e:
-                self.stdout.write(self.style.ERROR(
-                    f"❌ Erreur pour {phone}: {e}"))
+                self.stdout.write(self.style.ERROR(f"❌ Erreur pour {phone}: {e}"))
 
         return added_count, skipped_count
 
@@ -74,13 +73,14 @@ class Command(BaseCommand):
             defaults={
                 "added_by": admin_user,
                 "notes": "Numéro de test ajouté automatiquement",
-                "is_active": True
-            }
+                "is_active": True,
+            },
         )
 
         if created:
-            self.stdout.write(self.style.SUCCESS(
-                f"✅ {phone} ajouté à la liste blanche"))
+            self.stdout.write(
+                self.style.SUCCESS(f"✅ {phone} ajouté à la liste blanche")
+            )
             return 1, 0
 
         return self._handle_existing_phone(whitelist_item, phone, force)
@@ -88,33 +88,35 @@ class Command(BaseCommand):
     def _handle_existing_phone(self, whitelist_item, phone, force):
         """Gère un numéro déjà existant."""
         if not force:
-            self.stdout.write(self.style.WARNING(
-                f"⚠️  {phone} déjà présent (ignoré)"))
+            self.stdout.write(self.style.WARNING(f"⚠️  {phone} déjà présent (ignoré)"))
             return 0, 1
 
         if not whitelist_item.is_active:
             whitelist_item.is_active = True
             whitelist_item.save()
-            self.stdout.write(self.style.SUCCESS(
-                f"✅ {phone} réactivé dans la liste blanche"))
+            self.stdout.write(
+                self.style.SUCCESS(f"✅ {phone} réactivé dans la liste blanche")
+            )
             return 1, 0
         else:
-            self.stdout.write(self.style.WARNING(
-                f"⚠️  {phone} déjà présent (ignoré)"))
+            self.stdout.write(self.style.WARNING(f"⚠️  {phone} déjà présent (ignoré)"))
             return 0, 1
 
     def _display_summary(self, added_count, skipped_count):
         """Affiche le résumé de l'opération."""
-        self.stdout.write("\n" + "="*50)
+        self.stdout.write("\n" + "=" * 50)
         self.stdout.write(self.style.SUCCESS("Initialisation terminée:"))
         self.stdout.write(f"  - Numéros ajoutés: {added_count}")
         self.stdout.write(f"  - Numéros ignorés: {skipped_count}")
-        self.stdout.write(
-            f"  - Total dans la liste: {PhoneWhitelist.objects.count()}")
+        self.stdout.write(f"  - Total dans la liste: {PhoneWhitelist.objects.count()}")
 
         if added_count > 0:
-            self.stdout.write(self.style.SUCCESS(
-                "\n✅ Liste blanche initialisée avec succès !"))
+            self.stdout.write(
+                self.style.SUCCESS("\n✅ Liste blanche initialisée avec succès !")
+            )
         else:
-            self.stdout.write(self.style.WARNING(
-                "\n⚠️  Aucun nouveau numéro ajouté. Utilisez --force pour réactiver les numéros existants."))
+            self.stdout.write(
+                self.style.WARNING(
+                    "\n⚠️  Aucun nouveau numéro ajouté. Utilisez --force pour réactiver les numéros existants."
+                )
+            )

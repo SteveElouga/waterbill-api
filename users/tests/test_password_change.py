@@ -309,8 +309,10 @@ class PasswordChangeServiceTestCase(MockedAPITestCase):
 
             # La validation du mot de passe se fait maintenant dans le serializer
             # Le service accepte n'importe quel mot de passe et laisse le serializer valider
-            result = PasswordChangeService.request_password_change(self.user, "wrongpassword")
-            
+            result = PasswordChangeService.request_password_change(
+                self.user, "wrongpassword"
+            )
+
             # Le service devrait réussir car la validation se fait ailleurs
             self.assertTrue(result["success"])
             self.assertIn("code de vérification", result["message"])

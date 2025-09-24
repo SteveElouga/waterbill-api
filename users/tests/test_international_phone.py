@@ -43,10 +43,12 @@ class InternationalPhoneTestCase(APITestCase, WhitelistAPITestCase):
             # 6 derniers chiffres du timestamp
             unique_suffix = str(int(time.time() * 1000))[-6:]
             phone_number = f"675799{unique_suffix}"
-            
+
             # Ajouter le numéro à la liste blanche
-            self.add_phone_to_whitelist(phone_number, f"Numéro de test international {unique_suffix}")
-            
+            self.add_phone_to_whitelist(
+                phone_number, f"Numéro de test international {unique_suffix}"
+            )
+
             data = {
                 "phone": phone_number,  # Sans le + - numéro unique
                 "first_name": "John",
@@ -79,10 +81,12 @@ class InternationalPhoneTestCase(APITestCase, WhitelistAPITestCase):
             # 6 derniers chiffres du timestamp
             unique_suffix = str(int(time.time() * 1000))[-6:]
             phone_number = f"675799{unique_suffix}"
-            
+
             # Ajouter le numéro à la liste blanche (sans le +)
-            self.add_phone_to_whitelist(phone_number, f"Numéro de test plus {unique_suffix}")
-            
+            self.add_phone_to_whitelist(
+                phone_number, f"Numéro de test plus {unique_suffix}"
+            )
+
             data = {
                 "phone": f"+{phone_number}",  # Avec le + - numéro unique
                 "first_name": "Jane",
@@ -223,10 +227,12 @@ class InternationalPhoneTestCase(APITestCase, WhitelistAPITestCase):
             for i, phone in enumerate(test_cases):
                 with self.subTest(phone=phone):
                     unique_id = base_timestamp + i
-                    
+
                     # Ajouter le numéro à la liste blanche
-                    self.add_phone_to_whitelist(phone, f"Numéro de test format {unique_id}")
-                    
+                    self.add_phone_to_whitelist(
+                        phone, f"Numéro de test format {unique_id}"
+                    )
+
                     data = {
                         "phone": phone,
                         "first_name": f"Test{unique_id}",

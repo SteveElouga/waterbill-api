@@ -121,8 +121,7 @@ class ActivationTokenModelTest(MockedTestCase):
         self.assertTrue(self.user.is_active)
 
         # Vérifier que le token est supprimé
-        self.assertFalse(ActivationToken.objects.filter(
-            user=self.user).exists())
+        self.assertFalse(ActivationToken.objects.filter(user=self.user).exists())
 
 
 class ActivationServiceTest(MockedTestCase):
@@ -165,8 +164,7 @@ class ActivationServiceTest(MockedTestCase):
         self.assertTrue(user.is_active)
 
         # Vérifier que le token est supprimé
-        self.assertFalse(ActivationToken.objects.filter(
-            user=self.user).exists())
+        self.assertFalse(ActivationToken.objects.filter(user=self.user).exists())
 
     def test_verify_activation_code_wrong_code(self):
         """Test de vérification avec un code incorrect."""
@@ -245,8 +243,7 @@ class ActivationAPITest(MockedAPITestCase, WhitelistAPITestCase):
         }
 
         with self.settings(DEBUG=True):  # Utilise DummySmsGateway
-            response = self.client.post(
-                "/api/auth/register/", user_data, format="json")
+            response = self.client.post("/api/auth/register/", user_data, format="json")
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -337,15 +334,13 @@ class ActivationAPITest(MockedAPITestCase, WhitelistAPITestCase):
             "password": "testpass123",
         }
 
-        response = self.client.post(
-            "/api/auth/login/", login_data, format="json")
+        response = self.client.post("/api/auth/login/", login_data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = response.json()
         self.assertEqual(data["status"], "error")
-        self.assertIn(
-            "Numéro de téléphone ou mot de passe incorrect", data["message"])
+        self.assertIn("Numéro de téléphone ou mot de passe incorrect", data["message"])
 
     def test_login_active_user(self):
         """Test de connexion d'un utilisateur activé."""
@@ -358,8 +353,7 @@ class ActivationAPITest(MockedAPITestCase, WhitelistAPITestCase):
             "password": "testpass123",
         }
 
-        response = self.client.post(
-            "/api/auth/login/", login_data, format="json")
+        response = self.client.post("/api/auth/login/", login_data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

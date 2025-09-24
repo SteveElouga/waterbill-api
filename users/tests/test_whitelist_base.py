@@ -46,7 +46,9 @@ class WhitelistTestCase(TestCase):
         PhoneWhitelist.objects.all().delete()
         super().tearDown()
 
-    def add_phone_to_whitelist(self, phone: str, notes: str = "Numéro de test") -> PhoneWhitelist:
+    def add_phone_to_whitelist(
+        self, phone: str, notes: str = "Numéro de test"
+    ) -> PhoneWhitelist:
         """
         Ajoute un numéro à la liste blanche pour les tests.
 
@@ -66,7 +68,7 @@ class WhitelistTestCase(TestCase):
             phone=normalized_phone,
             added_by=self.admin_user,
             notes=notes,
-            is_active=True
+            is_active=True,
         )
 
     def remove_phone_from_whitelist(self, phone: str) -> bool:
@@ -137,7 +139,7 @@ class WhitelistAPITestCase:
     def setUp_whitelist(self):
         """Configuration pour les tests d'API avec liste blanche."""
         # Créer un administrateur si pas déjà fait
-        if not hasattr(self, 'admin_user'):
+        if not hasattr(self, "admin_user"):
             self.admin_user = User.objects.create_user(
                 phone="+237670000000",
                 first_name="Test",
@@ -155,7 +157,9 @@ class WhitelistAPITestCase:
         PhoneWhitelist.objects.all().delete()
         super().tearDown()
 
-    def add_phone_to_whitelist(self, phone: str, notes: str = "Numéro de test") -> PhoneWhitelist:
+    def add_phone_to_whitelist(
+        self, phone: str, notes: str = "Numéro de test"
+    ) -> PhoneWhitelist:
         """Ajoute un numéro à la liste blanche."""
         normalized_phone = normalize_phone(phone)
         if not normalized_phone:
@@ -165,7 +169,7 @@ class WhitelistAPITestCase:
             phone=normalized_phone,
             added_by=self.admin_user,
             notes=notes,
-            is_active=True
+            is_active=True,
         )
 
     def create_test_whitelist(self):

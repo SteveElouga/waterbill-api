@@ -137,6 +137,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Vérifier si le numéro est dans la liste blanche
         from .models import PhoneWhitelist
+
         if not PhoneWhitelist.is_phone_authorized(international_phone):
             raise serializers.ValidationError(
                 "Votre numéro de téléphone n'est pas autorisé à créer un compte sur cette plateforme. "
@@ -304,8 +305,7 @@ class TokenSerializer(serializers.Serializer):
 class AuthResponseSerializer(serializers.Serializer):
     """Serializer pour les réponses d'authentification."""
 
-    status = serializers.CharField(
-        help_text="Statut de la réponse (success/error)")
+    status = serializers.CharField(help_text="Statut de la réponse (success/error)")
     message = serializers.CharField(help_text="Message descriptif")
     data = serializers.JSONField(help_text="Données de la réponse")
 
@@ -348,7 +348,8 @@ class ProfileDataSerializer(serializers.Serializer):
     email = serializers.EmailField(allow_null=True, help_text="Adresse email")
     address = serializers.CharField(allow_null=True, help_text="Adresse")
     apartment_name = serializers.CharField(
-        allow_null=True, help_text="Nom de l'appartement")
+        allow_null=True, help_text="Nom de l'appartement"
+    )
     date_joined = serializers.DateTimeField(help_text="Date d'inscription")
     is_active = serializers.BooleanField(help_text="Compte actif")
 
@@ -519,16 +520,14 @@ class TokenRefreshSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError(
-                "Le refresh token est obligatoire.")
+            raise serializers.ValidationError("Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
 
             RefreshToken(value)
         except Exception:
-            raise serializers.ValidationError(
-                "Refresh token invalide ou expiré.")
+            raise serializers.ValidationError("Refresh token invalide ou expiré.")
 
         return value
 
@@ -564,8 +563,7 @@ class LogoutSerializer(serializers.Serializer):
             ValidationError: Si le token n'est pas valide
         """
         if not value:
-            raise serializers.ValidationError(
-                "Le refresh token est obligatoire.")
+            raise serializers.ValidationError("Le refresh token est obligatoire.")
 
         try:
             from rest_framework_simplejwt.tokens import RefreshToken
@@ -683,8 +681,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"new_password": list(e.messages)})
+            raise serializers.ValidationError({"new_password": list(e.messages)})
 
         return attrs
 
@@ -702,8 +699,7 @@ class PasswordChangeRequestSerializer(serializers.Serializer):
         """Valide le mot de passe actuel."""
         user = self.context["request"].user
         if not user.check_password(value):
-            raise serializers.ValidationError(
-                "Le mot de passe actuel est incorrect.")
+            raise serializers.ValidationError("Le mot de passe actuel est incorrect.")
         return value
 
 
@@ -712,8 +708,7 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de mot de passe.
     """
 
-    token = serializers.CharField(
-        help_text="Token UUID de changement de mot de passe")
+    token = serializers.CharField(help_text="Token UUID de changement de mot de passe")
 
     def validate_token(self, value):
         """Nettoie et valide le token UUID."""
@@ -763,8 +758,7 @@ class PasswordChangeConfirmSerializer(serializers.Serializer):
         try:
             validate_password(new_password)
         except ValidationError as e:
-            raise serializers.ValidationError(
-                {"new_password": list(e.messages)})
+            raise serializers.ValidationError({"new_password": list(e.messages)})
 
         return attrs
 
@@ -776,8 +770,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name",
-                  "email", "address", "apartment_name"]
+        fields = ["first_name", "last_name", "email", "address", "apartment_name"]
 
     def validate_email(self, value):
         """Valide l'email s'il est fourni."""
@@ -785,8 +778,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             value
             and User.objects.filter(email=value).exclude(id=self.instance.id).exists()
         ):
-            raise serializers.ValidationError(
-                "Cette adresse email est déjà utilisée.")
+            raise serializers.ValidationError("Cette adresse email est déjà utilisée.")
         return value
 
     def validate_apartment_name(self, value):
@@ -829,8 +821,7 @@ class PhoneChangeConfirmSerializer(serializers.Serializer):
     Serializer pour la confirmation de changement de numéro de téléphone.
     """
 
-    token = serializers.CharField(
-        help_text="Token UUID de changement de numéro")
+    token = serializers.CharField(help_text="Token UUID de changement de numéro")
 
     def validate_token(self, value):
         """Nettoie et valide le token UUID."""
@@ -938,15 +929,16 @@ class PhoneChangeConfirmResponseSerializer(serializers.Serializer):
 
 # ===== SERIALIZERS POUR LA GESTION DE LA LISTE BLANCHE =====
 
+
 class PhoneWhitelistSerializer(serializers.ModelSerializer):
     """
     Serializer pour la liste blanche des numéros de téléphone.
     """
 
     added_by_display = serializers.CharField(
-        source="added_by.get_full_name", read_only=True)
-    added_by_phone = serializers.CharField(
-        source="added_by.phone", read_only=True)
+        source="added_by.get_full_name", read_only=True
+    )
+    added_by_phone = serializers.CharField(source="added_by.phone", read_only=True)
 
     class Meta:
         model = PhoneWhitelist
@@ -957,10 +949,9 @@ class PhoneWhitelistSerializer(serializers.ModelSerializer):
             "added_by_phone",
             "added_at",
             "notes",
-            "is_active"
+            "is_active",
         ]
-        read_only_fields = ["id", "added_by_display",
-                            "added_by_phone", "added_at"]
+        read_only_fields = ["id", "added_by_display", "added_by_phone", "added_at"]
 
 
 class PhoneWhitelistAddSerializer(serializers.Serializer):
@@ -970,17 +961,16 @@ class PhoneWhitelistAddSerializer(serializers.Serializer):
 
     phone = serializers.CharField(
         max_length=15,
-        help_text="Numéro de téléphone au format international (ex: +237670000000)"
+        help_text="Numéro de téléphone au format international (ex: +237670000000)",
     )
     notes = serializers.CharField(
         max_length=500,
         required=False,
         allow_blank=True,
-        help_text="Notes optionnelles sur ce numéro"
+        help_text="Notes optionnelles sur ce numéro",
     )
     is_active = serializers.BooleanField(
-        default=True,
-        help_text="Si False, ce numéro ne peut plus créer de compte"
+        default=True, help_text="Si False, ce numéro ne peut plus créer de compte"
     )
 
     def validate_phone(self, value):
@@ -988,16 +978,15 @@ class PhoneWhitelistAddSerializer(serializers.Serializer):
         from users.utils.phone_utils import normalize_phone
 
         if not value:
-            raise serializers.ValidationError(
-                "Le numéro de téléphone est requis.")
+            raise serializers.ValidationError("Le numéro de téléphone est requis.")
 
         normalized_phone = normalize_phone(value)
         if not normalized_phone:
-            raise serializers.ValidationError(
-                "Format de numéro de téléphone invalide.")
+            raise serializers.ValidationError("Format de numéro de téléphone invalide.")
 
         # Vérifier si le numéro existe déjà
         from users.models import PhoneWhitelist
+
         if PhoneWhitelist.objects.filter(phone=normalized_phone).exists():
             raise serializers.ValidationError(
                 "Ce numéro est déjà dans la liste blanche."
@@ -1012,8 +1001,7 @@ class PhoneWhitelistCheckSerializer(serializers.Serializer):
     """
 
     phone = serializers.CharField(
-        max_length=15,
-        help_text="Numéro de téléphone à vérifier"
+        max_length=15, help_text="Numéro de téléphone à vérifier"
     )
 
     def validate_phone(self, value):
@@ -1021,13 +1009,11 @@ class PhoneWhitelistCheckSerializer(serializers.Serializer):
         from users.utils.phone_utils import normalize_phone
 
         if not value:
-            raise serializers.ValidationError(
-                "Le numéro de téléphone est requis.")
+            raise serializers.ValidationError("Le numéro de téléphone est requis.")
 
         normalized_phone = normalize_phone(value)
         if not normalized_phone:
-            raise serializers.ValidationError(
-                "Format de numéro de téléphone invalide.")
+            raise serializers.ValidationError("Format de numéro de téléphone invalide.")
 
         return normalized_phone
 
