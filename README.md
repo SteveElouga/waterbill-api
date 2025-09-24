@@ -361,6 +361,50 @@ POST /api/auth/logout/
 # Réponse: {"status": "success", "message": "Déconnexion réussie"}
 ```
 
+#### **📋 API de Gestion de la Liste Blanche (Administration)**
+
+**🔐 Endpoints réservés aux administrateurs** (authentification JWT requise) :
+
+```bash
+# 1. Lister tous les numéros autorisés
+GET /api/auth/admin/whitelist/
+Authorization: Bearer <admin_token>
+# Réponse: Liste complète avec statistiques
+
+# 2. Vérifier si un numéro est autorisé
+POST /api/auth/admin/whitelist/check/
+Authorization: Bearer <admin_token>
+{
+  "phone": "+237670000000"
+}
+# Réponse: {"is_authorized": true/false, "whitelist_details": {...}}
+
+# 3. Ajouter un numéro à la liste blanche
+POST /api/auth/admin/whitelist/add/
+Authorization: Bearer <admin_token>
+{
+  "phone": "+237670000000",
+  "notes": "Client VIP",
+  "is_active": true
+}
+# Réponse: Numéro ajouté avec détails
+
+# 4. Supprimer un numéro de la liste blanche
+DELETE /api/auth/admin/whitelist/remove/
+Authorization: Bearer <admin_token>
+{
+  "phone": "+237670000000"
+}
+# Réponse: Confirmation de suppression
+```
+
+**🛡️ Sécurité de l'API d'administration :**
+
+- **Permissions** : `IsAdminUser` uniquement
+- **Throttling** : 1000 requêtes/heure par admin
+- **Validation** : Normalisation automatique des numéros
+- **Audit** : Traçabilité des modifications
+
 #### **Flux d'activation par SMS**
 
 1. **Inscription** → Compte créé inactif (`is_active=False`)

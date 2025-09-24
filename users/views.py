@@ -7,7 +7,7 @@ avec gestion des erreurs et documentation OpenAPI.
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
 from drf_spectacular.utils import extend_schema
@@ -19,6 +19,7 @@ from .throttling import (
     ActivateRateThrottle,
     ResendCodeRateThrottle,
     PhoneBasedThrottle,
+    AdminRateThrottle,
 )
 
 from .serializers import (
@@ -52,6 +53,11 @@ from .serializers import (
     ProfileUpdateResponseSerializer,
     PhoneChangeRequestResponseSerializer,
     PhoneChangeConfirmResponseSerializer,
+    # Serializers pour la liste blanche
+    PhoneWhitelistSerializer,
+    PhoneWhitelistAddSerializer,
+    PhoneWhitelistCheckSerializer,
+    PhoneWhitelistResponseSerializer,
 )
 from .services import AuthService, ActivationService, ResponseService
 

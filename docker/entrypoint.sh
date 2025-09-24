@@ -41,14 +41,40 @@ echo "📦 Collectstatic..."
 python manage.py collectstatic --noinput 2>/dev/null || echo "⚠️  Collectstatic ignoré (pas de fichiers statiques)"
 
 # Création auto du superuser si variables présentes (optionnel)
-if [[ -n "$DJANGO_SUPERUSER_USERNAME" && -n "$DJANGO_SUPERUSER_EMAIL" && -n "$DJANGO_SUPERUSER_PASSWORD" ]]; then
+if [[ -n "$DJANGO_SUPERUSER_PHONE" && -n "$DJANGO_SUPERUSER_PASSWORD" ]]; then
   echo "👤 Création du superuser..."
-  # Utiliser le numéro de téléphone comme identifiant pour notre modèle User personnalisé
-  python manage.py createsuperuser \
-    --username "$DJANGO_SUPERUSER_USERNAME" \
-    --email "$DJANGO_SUPERUSER_EMAIL" \
-    --phone "$DJANGO_SUPERUSER_USERNAME" \
-    --noinput || true
+  # Créer le superuser avec le modèle User personnalisé (phone-based)
+  python - <<'PYCODE'
+import os
+import django
+from django.core.management import execute_from_command_line
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'waterbill.settings')
+django.setup()
+
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+phone = os.environ.get('DJANGO_SUPERUSER_PHONE')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+first_name = os.environ.get('DJANGO_SUPERUSER_FIRST_NAME', 'Admin')
+last_name = os.environ.get('DJANGO_SUPERUSER_LAST_NAME', 'User')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@example.com')
+address = os.environ.get('DJANGO_SUPERUSER_ADDRESS', '123 Main St')
+
+if not User.objects.filter(phone=phone).exists():
+    User.objects.create_superuser(
+        phone=phone,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        address=address
+    )
+    print(f"✅ Superutilisateur créé avec le numéro {phone}")
+else:
+    print(f"⚠️ Superutilisateur avec le numéro {phone} existe déjà")
+PYCODE
 fi
 
 # Lancement serveur (Gunicorn en prod, runserver en dev)

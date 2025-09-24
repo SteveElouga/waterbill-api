@@ -233,6 +233,8 @@ REST_FRAMEWORK = {
         "resend_code": (
             TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "5/minute"
         ),
+        # Throttling pour les opérations d'administration
+        "admin": "1000/hour",
         # Limite élevée pour les tests
         "phone_based": (
             TEST_THROTTLE_RATE if os.getenv("DJANGO_TEST_MODE") else "10/hour"

@@ -85,6 +85,14 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      # Configuration de session - augmenter le temps de session
+      PGADMIN_CONFIG_SESSION_COOKIE_LIFETIME: ${PGADMIN_SESSION_LIFETIME:-28800}
+      PGADMIN_CONFIG_SESSION_COOKIE_SECURE: False
+      PGADMIN_CONFIG_SESSION_COOKIE_HTTPONLY: True
+      PGADMIN_CONFIG_SESSION_COOKIE_SAMESITE: Lax
+      # Configuration de sécurité
+      PGADMIN_CONFIG_LOGIN_BANNER: "WaterBill API - Administration Base de Données"
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "INFO"
     ports:
       - "5050:80"
     depends_on:

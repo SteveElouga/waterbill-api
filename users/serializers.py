@@ -6,7 +6,7 @@ et gestion des utilisateurs avec validation des données.
 """
 
 from .utils.phone_utils import normalize_phone, validate_phone_length
-from .models import User
+from .models import User, PhoneWhitelist
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -929,6 +929,112 @@ class PhoneChangeRequestResponseSerializer(serializers.Serializer):
 class PhoneChangeConfirmResponseSerializer(serializers.Serializer):
     """
     Serializer pour la réponse de confirmation de changement de numéro.
+    """
+
+    status = serializers.CharField(help_text=STATUS_HELP_TEXT)
+    message = serializers.CharField(help_text=MESSAGE_HELP_TEXT)
+    data = serializers.JSONField(help_text=ADDITIONAL_DATA_HELP_TEXT)
+
+
+# ===== SERIALIZERS POUR LA GESTION DE LA LISTE BLANCHE =====
+
+class PhoneWhitelistSerializer(serializers.ModelSerializer):
+    """
+    Serializer pour la liste blanche des numéros de téléphone.
+    """
+
+    added_by_display = serializers.CharField(
+        source="added_by.get_full_name", read_only=True)
+    added_by_phone = serializers.CharField(
+        source="added_by.phone", read_only=True)
+
+    class Meta:
+        model = PhoneWhitelist
+        fields = [
+            "id",
+            "phone",
+            "added_by_display",
+            "added_by_phone",
+            "added_at",
+            "notes",
+            "is_active"
+        ]
+        read_only_fields = ["id", "added_by_display",
+                            "added_by_phone", "added_at"]
+
+
+class PhoneWhitelistAddSerializer(serializers.Serializer):
+    """
+    Serializer pour ajouter un numéro à la liste blanche.
+    """
+
+    phone = serializers.CharField(
+        max_length=15,
+        help_text="Numéro de téléphone au format international (ex: +237670000000)"
+    )
+    notes = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True,
+        help_text="Notes optionnelles sur ce numéro"
+    )
+    is_active = serializers.BooleanField(
+        default=True,
+        help_text="Si False, ce numéro ne peut plus créer de compte"
+    )
+
+    def validate_phone(self, value):
+        """Valide et normalise le numéro de téléphone."""
+        from users.utils.phone_utils import normalize_phone
+
+        if not value:
+            raise serializers.ValidationError(
+                "Le numéro de téléphone est requis.")
+
+        normalized_phone = normalize_phone(value)
+        if not normalized_phone:
+            raise serializers.ValidationError(
+                "Format de numéro de téléphone invalide.")
+
+        # Vérifier si le numéro existe déjà
+        from users.models import PhoneWhitelist
+        if PhoneWhitelist.objects.filter(phone=normalized_phone).exists():
+            raise serializers.ValidationError(
+                "Ce numéro est déjà dans la liste blanche."
+            )
+
+        return normalized_phone
+
+
+class PhoneWhitelistCheckSerializer(serializers.Serializer):
+    """
+    Serializer pour vérifier si un numéro est dans la liste blanche.
+    """
+
+    phone = serializers.CharField(
+        max_length=15,
+        help_text="Numéro de téléphone à vérifier"
+    )
+
+    def validate_phone(self, value):
+        """Valide et normalise le numéro de téléphone."""
+        from users.utils.phone_utils import normalize_phone
+
+        if not value:
+            raise serializers.ValidationError(
+                "Le numéro de téléphone est requis.")
+
+        normalized_phone = normalize_phone(value)
+        if not normalized_phone:
+            raise serializers.ValidationError(
+                "Format de numéro de téléphone invalide.")
+
+        return normalized_phone
+
+
+class PhoneWhitelistResponseSerializer(serializers.Serializer):
+    """
+    Serializer pour les réponses de l'API de liste blanche.
     """
 
     status = serializers.CharField(help_text=STATUS_HELP_TEXT)

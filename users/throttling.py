@@ -232,3 +232,30 @@ class PhoneBasedThrottle(SimpleRateThrottle):
 
         # Fallback sur l'IP si pas de téléphone
         return f"phone_ip_{self.get_ident(request)}"
+
+
+class AdminRateThrottle(SimpleRateThrottle):
+    """
+    Throttling pour les opérations d'administration.
+
+    Limite les requêtes des administrateurs pour éviter les abus
+    tout en leur permettant une utilisation normale.
+    """
+
+    scope = "admin"
+
+    def get_cache_key(self, request, view):
+        """
+        Génère une clé de cache basée sur l'utilisateur administrateur.
+
+        Args:
+            request: Requête HTTP
+            view: Vue appelée
+
+        Returns:
+            str: Clé de cache pour le throttling
+        """
+        if not request.user.is_authenticated or not request.user.is_staff:
+            return None
+
+        return f"admin_throttle_{request.user.id}"

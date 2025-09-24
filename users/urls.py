@@ -8,6 +8,7 @@ des profils utilisateurs.
 from django.urls import path
 
 from . import views
+from . import views_whitelist
 
 app_name = "users"
 
@@ -55,4 +56,13 @@ urlpatterns = [
         views.phone_change_confirm_view,
         name="phone_change_confirm",
     ),
+    # Administration - Liste blanche des numéros
+    path("admin/whitelist/", views_whitelist.phone_whitelist_list_view,
+         name="whitelist_list"),
+    path("admin/whitelist/add/",
+         views_whitelist.phone_whitelist_add_view, name="whitelist_add"),
+    path("admin/whitelist/check/",
+         views_whitelist.phone_whitelist_check_view, name="whitelist_check"),
+    path("admin/whitelist/remove/",
+         views_whitelist.phone_whitelist_remove_view, name="whitelist_remove"),
 ]
