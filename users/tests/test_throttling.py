@@ -6,6 +6,7 @@ et leur application aux endpoints d'authentification.
 """
 
 from django.core.cache import cache
+from django.test import override_settings
 from rest_framework import status
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -14,6 +15,24 @@ from .test_settings import MockedTestCase
 from .test_whitelist_base import WhitelistAPITestCase
 
 
+# Configuration de throttling pour les tests
+THROTTLE_SETTINGS = {
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '500/hour',
+        'user': '2000/hour',
+        'login': '15/minute',
+        'register': '10/minute',
+        'auth': '30/minute',
+        'burst': '50/second',
+        'activate': '5/minute',
+        'resend_code': '10/hour',
+        'phone_based': '5/minute',
+        'admin': '1000/hour',
+    }
+}
+
+
+@override_settings(**THROTTLE_SETTINGS)
 class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
     """Tests pour le système de throttling."""
 
@@ -47,13 +66,13 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
 
         # Faire plusieurs requêtes rapides pour déclencher le throttling
         base_phone = 237658552294
-        for i in range(11):  # 10 inscriptions autorisées par minute
+        for i in range(12):  # 10 inscriptions autorisées par minute + 2 pour déclencher le throttling
             phone_number = str(base_phone + i)
             self.register_data["phone"] = phone_number
             # Email unique
             self.register_data["email"] = f"test{i}@example.com"
 
-            # Ajouter le numéro à la liste blanche
+            # Ajouter le numéro à la liste blanche AVANT la requête
             self.add_phone_to_whitelist(
                 phone_number, f"Numéro de test throttling {i}")
 
@@ -61,19 +80,11 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
 
             if i < 10:
                 # Les 10 premières devraient réussir
-                self.assertIn(
-                    response.status_code,
-                    [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
-                )
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             else:
-                # La 11ème devrait être throttlée
-                self.assertIn(
-                    response.status_code,
-                    [
-                        status.HTTP_429_TOO_MANY_REQUESTS,
-                        status.HTTP_400_BAD_REQUEST,
-                    ],
-                )
+                # Les suivantes devraient être throttlées
+                self.assertEqual(response.status_code,
+                                 status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_login_throttling(self) -> None:
         """Test du throttling sur l'endpoint de connexion."""
@@ -85,20 +96,22 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
 
         # Créer un utilisateur d'abord
         register_url = reverse("users:register")
-        self.client.post(register_url, self.register_data, format="json")
+        response = self.client.post(
+            register_url, self.register_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Faire plusieurs tentatives de connexion rapides
-        for i in range(16):  # 15 tentatives autorisées par minute
-            response = self.client.post(url, self.login_data, format="json")
+        # Faire plusieurs tentatives de connexion rapides avec de mauvaises données
+        for i in range(17):  # 15 tentatives autorisées par minute + 2 pour déclencher le throttling
+            login_data = {
+                "phone": self.register_data["phone"], "password": "wrong_password"}
+            response = self.client.post(url, login_data, format="json")
 
             if i < 15:
-                # Les 15 premières devraient réussir (même si mauvais mot de passe)
-                self.assertIn(
-                    response.status_code,
-                    [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-                )
+                # Les 15 premières devraient donner une erreur 400 (mauvais mot de passe)
+                self.assertEqual(response.status_code,
+                                 status.HTTP_400_BAD_REQUEST)
             else:
-                # La 16ème devrait être throttlée
+                # Les suivantes devraient être throttlées
                 self.assertEqual(
                     response.status_code, status.HTTP_429_TOO_MANY_REQUESTS
                 )
@@ -109,17 +122,15 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
         refresh_url = reverse("users:token_refresh")
         refresh_data = {"refresh": "invalid_token"}
 
-        # AuthRateThrottle permet 30 requêtes par minute
+        # AuthRateThrottle permet 1000 requêtes par minute en mode test
         for i in range(32):  # 30 requêtes autorisées + 2 pour déclencher le throttling
             response = self.client.post(
                 refresh_url, refresh_data, format="json")
 
             if i < 30:
-                # Les 30 premières devraient passer (même avec token invalide)
-                self.assertIn(
-                    response.status_code,
-                    [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS]
-                )
+                # Les 30 premières devraient donner une erreur 400 (token invalide)
+                self.assertEqual(response.status_code,
+                                 status.HTTP_400_BAD_REQUEST)
             else:
                 # Les suivantes devraient être throttlées
                 self.assertEqual(
@@ -154,10 +165,7 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
         self.add_phone_to_whitelist(
             phone_number, "Numéro pour test après reset")
         response = self.client.post(url, self.register_data, format="json")
-        self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_throttling_response_format(self) -> None:
         """Test que les réponses de throttling ont le bon format."""
@@ -186,12 +194,9 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
                 break
 
         # Vérifier le format de la réponse de throttling
-        # Si le throttling ne s'est pas déclenché à cause des erreurs SMS,
-        # on accepte aussi le code 400 comme valide
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_429_TOO_MANY_REQUESTS, status.HTTP_400_BAD_REQUEST],
-        )
+        # La 11ème requête devrait être throttlée
+        self.assertEqual(response.status_code,
+                         status.HTTP_429_TOO_MANY_REQUESTS)
 
         # Si c'est une réponse de throttling (429), vérifier les headers
         if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
@@ -224,11 +229,9 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
                 url, self.register_data, format="json", **ip1_headers
             )
 
-        # IP1 devrait être throttlée ou échouer à cause des erreurs SMS
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_429_TOO_MANY_REQUESTS, status.HTTP_400_BAD_REQUEST],
-        )
+        # IP1 devrait être throttlée
+        self.assertEqual(response.status_code,
+                         status.HTTP_429_TOO_MANY_REQUESTS)
 
         # IP2 devrait encore pouvoir faire des requêtes
         phone_number = str(base_phone + 100)  # Numéro différent
@@ -238,10 +241,7 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
         response = self.client.post(
             url, self.register_data, format="json", **ip2_headers
         )
-        self.assertIn(
-            response.status_code, [
-                status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST]
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_authenticated_user_no_throttling(self) -> None:
         """Test que les utilisateurs authentifiés ne sont pas throttlés."""
@@ -298,11 +298,9 @@ class ThrottlingTestCase(MockedTestCase, WhitelistAPITestCase):
                 refresh_url, refresh_data, format="json")
 
             if i < 30:
-                # Les 30 premières devraient passer (même avec token invalide)
-                self.assertIn(
-                    response.status_code,
-                    [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS]
-                )
+                # Les 30 premières devraient donner une erreur 400 (token invalide)
+                self.assertEqual(response.status_code,
+                                 status.HTTP_400_BAD_REQUEST)
             else:
                 # La 31ème devrait être throttlée
                 self.assertEqual(

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from unittest.mock import patch
 
 from users.models import PhoneWhitelist
 from users.tests.test_whitelist_base import WhitelistAPITestCase
@@ -393,3 +394,177 @@ class PhoneWhitelistAPITestCase(APITestCase, WhitelistAPITestCase):
         # Note: Pour un vrai test de throttling, il faudrait
         # configurer des limites très basses en test et faire
         # beaucoup de requêtes rapides
+
+    def test_whitelist_list_view_exception_handling(self):
+        """Test de gestion d'exception dans la vue de liste."""
+        # Ce test simule une exception dans la vue de liste
+        # pour couvrir le bloc except
+        url = "/api/auth/admin/whitelist/"
+
+        # Mock pour provoquer une exception
+        with patch('users.models.PhoneWhitelist.objects.select_related') as mock_query:
+            mock_query.side_effect = Exception("Database error")
+
+            response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            )
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response_data = response.json()
+            self.assertEqual(response_data["status"], "error")
+            self.assertIn("Erreur lors de la récupération",
+                          response_data["message"])
+
+    def test_whitelist_add_view_exception_handling(self):
+        """Test de gestion d'exception dans la vue d'ajout."""
+        url = "/api/auth/admin/whitelist/add/"
+
+        data = {
+            "phone": "+237670000999",
+            "notes": "Test exception",
+            "is_active": True
+        }
+
+        # Mock pour provoquer une exception lors de la création
+        with patch('users.models.PhoneWhitelist.objects.create') as mock_create:
+            mock_create.side_effect = Exception("Database constraint error")
+
+            response = self.client.post(
+                url,
+                data,
+                format="json",
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            )
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response_data = response.json()
+            self.assertEqual(response_data["status"], "error")
+            self.assertIn("Erreur lors de l'ajout", response_data["message"])
+
+    def test_whitelist_check_view_exception_handling(self):
+        """Test de gestion d'exception dans la vue de vérification."""
+        url = "/api/auth/admin/whitelist/check/"
+
+        data = {
+            "phone": "+237670000999"
+        }
+
+        # Mock pour provoquer une exception dans le serializer
+        with patch('users.views_whitelist.PhoneWhitelistCheckSerializer') as mock_serializer_class:
+            mock_serializer = mock_serializer_class.return_value
+            mock_serializer.is_valid.side_effect = Exception(
+                "Serializer error")
+
+            response = self.client.post(
+                url,
+                data,
+                format="json",
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            )
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response_data = response.json()
+            self.assertEqual(response_data["status"], "error")
+            self.assertIn("Erreur lors de la vérification",
+                          response_data["message"])
+
+    def test_whitelist_remove_view_exception_handling(self):
+        """Test de gestion d'exception dans la vue de suppression."""
+        # D'abord créer un numéro
+        self.add_phone_to_whitelist("+237670000999", "Test exception")
+
+        url = "/api/auth/admin/whitelist/remove/"
+        data = {"phone": "+237670000999"}
+
+        # Mock pour provoquer une exception dans le serializer
+        with patch('users.views_whitelist.PhoneWhitelistCheckSerializer') as mock_serializer_class:
+            mock_serializer = mock_serializer_class.return_value
+            mock_serializer.is_valid.side_effect = Exception(
+                "Serializer error")
+
+            response = self.client.delete(
+                url,
+                data,
+                format="json",
+                HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+            )
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            response_data = response.json()
+            self.assertEqual(response_data["status"], "error")
+            self.assertIn("Erreur lors de la suppression",
+                          response_data["message"])
+
+    def test_whitelist_add_view_serializer_validation_error(self):
+        """Test de validation d'erreur du serializer dans la vue d'ajout."""
+        url = "/api/auth/admin/whitelist/add/"
+
+        # Données invalides pour déclencher une erreur de validation
+        data = {
+            "phone": "invalid_phone",  # Format invalide
+            "notes": "x" * 1000,  # Trop long
+            "is_active": "invalid_boolean"  # Type invalide
+        }
+
+        response = self.client.post(
+            url,
+            data,
+            format="json",
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "error")
+        self.assertEqual(response_data["message"], "Données invalides")
+        # Vérifier qu'il y a des erreurs de validation (peuvent être sur différents champs)
+        self.assertTrue(len(response_data["data"]) > 0)
+
+    def test_whitelist_check_view_serializer_validation_error(self):
+        """Test de validation d'erreur du serializer dans la vue de vérification."""
+        url = "/api/auth/admin/whitelist/check/"
+
+        # Données invalides
+        data = {
+            "phone": ""  # Numéro vide
+        }
+
+        response = self.client.post(
+            url,
+            data,
+            format="json",
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "error")
+        self.assertEqual(response_data["message"], "Données invalides")
+        self.assertIn("phone", response_data["data"])
+
+    def test_whitelist_remove_view_serializer_validation_error(self):
+        """Test de validation d'erreur du serializer dans la vue de suppression."""
+        url = "/api/auth/admin/whitelist/remove/"
+
+        # Données invalides
+        data = {
+            "phone": ""  # Numéro vide
+        }
+
+        response = self.client.delete(
+            url,
+            data,
+            format="json",
+            HTTP_AUTHORIZATION=f"Bearer {self.admin_token}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_data = response.json()
+        self.assertEqual(response_data["status"], "error")
+        self.assertEqual(response_data["message"], "Données invalides")
+        self.assertIn("phone", response_data["data"])
