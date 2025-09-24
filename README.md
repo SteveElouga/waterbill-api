@@ -1494,7 +1494,7 @@ urlpatterns = [
 
 #### Structure des tests
 
-- **Tests unitaires** : `users/tests/` (254 tests avec mocks automatiques)
+- **Tests unitaires** : `users/tests/` (293 tests avec mocks automatiques)
 - **Tests d'intégration** : `tests/` (à créer)
 - **Tests API** : Utiliser `pytest-django` et `factory-boy`
 - **Mocks** : `users/tests/mocks.py` pour services externes
@@ -2556,7 +2556,7 @@ Les tests de throttling (`test_throttling.py`) sont automatiquement exclus du mo
 
 ### 📊 Couverture de code
 
-Le projet maintient une couverture de code élevée avec **228 tests** couvrant :
+Le projet maintient une couverture de code élevée avec **293 tests** couvrant :
 
 - ✅ **Authentification** : Inscription, connexion, activation SMS
 - ✅ **Gestion des mots de passe** : Reset, changement sécurisé

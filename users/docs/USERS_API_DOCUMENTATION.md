@@ -1180,7 +1180,7 @@ class MyTestCase(TestCase):
 
 #### **📊 Résultats des tests :**
 
-- **107 tests** collectés et exécutés
+- **293 tests** collectés et exécutés
 - **100% de réussite** avec mocks
 - **Tests déterministes** sans dépendance externe
 - **Exécution rapide** (< 1 minute)
@@ -1210,7 +1210,7 @@ TOKEN_REQUIRED_ERROR = "Le token est requis."
 ### **🔧 Commandes de test**
 
 ```bash
-# Tests complets avec mocks (107 tests)
+# Tests complets avec mocks (293 tests)
 ./scripts/test.sh unit
 
 # Tests avec couverture de code
@@ -2005,7 +2005,7 @@ python manage.py test users.tests.test_token_management.TestLogout -v 2
 
 # Suite complète des tests
 ./scripts/test.sh unit
-# ✅ Tous les tests passent (254 tests)
+# ✅ Tous les tests passent (293 tests)
 ```
 
 #### **Tests d'API**

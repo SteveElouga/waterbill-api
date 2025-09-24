@@ -70,9 +70,9 @@ Les tests de throttling (`test_throttling.py`) sont automatiquement exclus du mo
 
 ### 📈 Statistiques actuelles
 
-- **Total des tests** : 268 tests
-- **Couverture** : > 95%
-- **Modules testés** : 18 modules
+- **Total des tests** : 293 tests
+- **Couverture** : 85%
+- **Modules testés** : 21 modules
 - **Fonctionnalités couvertes** : 9 fonctionnalités principales
 
 ### 🏗️ Classes de Base pour Tests
