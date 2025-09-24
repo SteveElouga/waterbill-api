@@ -50,8 +50,8 @@ fi
 case "$1" in
     unit)
         echo -e "${GREEN}🧪 Lancement des tests unitaires...${NC}"
-        # Exclure les tests de throttling du mode test
-        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v -k 'not throttling'"
+        # Tous les tests unitaires (y compris throttling maintenant corrigé)
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v"
         ;;
     integration)
         echo -e "${GREEN}🔗 Lancement des tests d'intégration...${NC}"
@@ -73,13 +73,8 @@ case "$1" in
             exit 1
         fi
         echo -e "${GREEN}🎯 Lancement des tests spécifiques: $2${NC}"
-        # Vérifier si c'est un test de throttling
-        if [[ "$2" == *"throttling"* ]]; then
-            echo -e "${YELLOW}⚠️  Test de throttling détecté - Mode test désactivé${NC}"
-            docker-compose $COMPOSE_FILES exec web bash -c "pytest --tb=short -v $2"
-        else
-            docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v $2"
-        fi
+        # Tous les tests spécifiques avec mode test activé
+        docker-compose $COMPOSE_FILES exec web bash -c "DJANGO_TEST_MODE=1 pytest --tb=short -v $2"
         ;;
     all)
         echo -e "${GREEN}🚀 Lancement de tous les tests...${NC}"
